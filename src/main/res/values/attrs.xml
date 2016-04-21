@@ -1,0 +1,5 @@
+<resources>
+    <declare-styleable name="WebImageView">
+        <attr name="useCache" format="boolean" />
+    </declare-styleable>
+</resources>

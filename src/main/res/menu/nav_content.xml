@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_posts"
+            android:icon="@drawable/ic_menu_posts"
+            android:title="Posts"/>
+        <item
+            android:id="@+id/nav_pools"
+            android:icon="@drawable/ic_menu_pools"
+            android:title="Pools"/>
+        <item
+            android:id="@+id/nav_sets"
+            android:icon="@drawable/ic_menu_sets"
+            android:title="Sets"/>
+        <item
+            android:id="@+id/nav_blips"
+            android:icon="@drawable/ic_menu_blips"
+            android:title="Blips"/>
+        <item
+            android:id="@+id/nav_forum"
+            android:icon="@drawable/ic_menu_forum"
+            android:title="Forum"/>
+    </group>
+
+    <item android:title="User">
+        <menu>
+            <item
+                android:id="@+id/nav_login"
+                android:icon="@drawable/ic_menu_login"
+                android:title="Login"/>
+            <item
+                android:id="@+id/nav_dmail"
+                android:icon="@drawable/ic_menu_dmail"
+                android:title="DMail"/>
+        </menu>
+    </item>
+
+</menu>

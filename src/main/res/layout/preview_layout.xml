@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/colorPrimary"
+                android:padding="4dp">
+
+    <de.e621.rebane.components.WebImageView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/previewImage"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:adjustViewBounds="true"/>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/previewImage"
+        android:layout_alignParentStart="true"
+        android:id="@+id/previewInner"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtLeft"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtMid"
+            android:textColor="#ffffff"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtRight"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+</RelativeLayout>

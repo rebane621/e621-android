@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="de.e621.rebane.activities.SettingsActivity"
+    tools:showIn="@layout/app_bar_settings"
+    android:background="@color/colorPrimaryDark"
+    >
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:id="@+id/scrollView">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_defaultsearch"
+                android:id="@+id/textView2"
+                android:textColor="@color/text_neutral"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"/>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/txtDSearch"
+                android:textColor="@android:color/white"
+                android:inputType="text"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_blacklist"
+                android:id="@+id/textView3"
+                android:textColor="@color/text_neutral"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_blacklist_desc"
+                android:id="@+id/textView5"
+                android:textColor="@color/text_neutral"/>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:ems="10"
+                android:id="@+id/txtBlacklist"
+                android:textColor="@android:color/white"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_baseurl"
+                android:id="@+id/textView4"
+                android:textColor="@color/text_neutral"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_baseurl_desc"
+                android:id="@+id/textView6"
+                android:textColor="@color/text_neutral"/>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/txtBaseURL"
+                android:textColor="@android:color/white"
+                android:inputType="text"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_postsperpage"
+                android:id="@+id/textView7"
+                android:textColor="@color/text_neutral"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_postsperpage_desc"
+                android:id="@+id/textView8"
+                android:textColor="@color/text_neutral"/>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/txtPostsPerPage"
+                android:textColor="@android:color/white"
+                android:inputType="number"
+                android:numeric="integer"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_postsperpage"
+                android:id="@+id/textView11"
+                android:textColor="@color/text_neutral"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="0dp"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="0dp"/>
+
+            <Switch
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New Switch"
+                android:id="@+id/chkQuality"
+                android:layout_centerVertical="true"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="right"
+                android:textColor="@color/text_neutral"
+                android:textOff="Mashed Potato "
+                android:textOn="Acceptable"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Apply"
+                android:id="@+id/bnApply"
+                android:layout_gravity="right"
+                android:clickable="true"/>
+        </LinearLayout>
+    </ScrollView>
+
+</RelativeLayout>

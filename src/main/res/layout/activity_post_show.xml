@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="de.e621.rebane.activities.PostShowActivity"
+    android:background="@color/colorPrimaryDark"
+    android:padding="0dp">
+
+    <de.e621.rebane.components.TouchImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/imageView"
+        app:useCache="false"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:adjustViewBounds="true"
+        android:padding="0dp"
+        android:visibility="gone"
+        />
+
+    <WebView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/swfView"
+        android:background="@color/colorPrimaryDark"
+        android:visibility="gone"
+        />
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/viewPostInfo"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp"
+            android:background="@color/background_dim">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Description"
+                android:id="@+id/textView12"
+                android:textColor="@android:color/white"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
+
+            <de.e621.rebane.components.DTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:id="@+id/txtDescription"
+                android:textColor="@color/text_neutral"
+                android:autoLink="web"
+                android:paddingLeft="3dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tags"
+                android:id="@+id/textView9"
+                android:textColor="@android:color/white"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                />
+
+            <ListView
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:id="@+id/lstTags"
+                android:layout_marginLeft="3dp"
+                android:nestedScrollingEnabled="true"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Statistics"
+                android:id="@+id/textView10"
+                android:textColor="@android:color/white"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Source"
+                android:id="@+id/txtStats1"
+                android:textColor="@color/text_neutral"
+                android:autoLink="web"
+                android:paddingLeft="3dp"/>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="8dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/bnFav"
+                    android:src="@mipmap/ic_img_fav_off"/>
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/bnRateUp"
+                    android:src="@mipmap/ic_img_rate_up_off"/>
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/bnRateDown"
+                    android:src="@mipmap/ic_img_rate_down_off"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/viewPostComments"
+        android:visibility="gone"
+        android:background="@color/background_dim">
+
+        <ListView
+            android:id="@+id/lstComments"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_horizontal"
+        android:id="@+id/listMore"
+        >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/bnMore"
+            android:clickable="true"
+            android:background="@color/background_dim"
+            android:src="@android:drawable/ic_menu_crop"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/bnComments"
+            android:clickable="true"
+            android:background="@color/background_dim"
+            android:src="@android:drawable/ic_menu_more"/>
+
+    </LinearLayout>
+
+</RelativeLayout>
