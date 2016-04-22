@@ -24,6 +24,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.logging.Logger;
 
+import de.e621.rebane.MiscStatics;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.PostListAdapter;
 import de.e621.rebane.components.WebImageView;
@@ -176,7 +177,7 @@ public class PostsActivity extends DrawerWrapper
     }
 
     void searchPosts(String escapedQuery, int page) {
-        if (!canRequest()) { quickToast("Cooldown!\nTry again in a few seconds"); return; }
+        if (!MiscStatics.canRequest(this)) return;
 
         openDB();
         baseURL = database.getValue(SettingsActivity.SETTINGBASEURL);

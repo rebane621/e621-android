@@ -15,8 +15,10 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import de.e621.rebane.FilterManager;
+import de.e621.rebane.MiscStatics;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.WebImageView;
@@ -30,44 +32,19 @@ public class DrawerWrapper extends AppCompatActivity
     public static Class<? extends DrawerWrapper> openActivity;
 
     final static String LIMITEREXTRA = "RequestAmmountLimiterTimestampArray";
-    static int maxRequests = 30;
-    static List<Long> requestLimiter = new LinkedList<Long>();
-    public static boolean canRequest() {
-        List<Long> remove = new ArrayList<Long>();
-        for (Long l : requestLimiter)
-            if (System.currentTimeMillis()-l > 60000)
-                remove.add(l);
-        requestLimiter.removeAll(remove);
-
-        if (requestLimiter.size() < maxRequests) {
-            requestLimiter.add(System.currentTimeMillis());
-            return true;
-        }
-        return false;
-    }
-
     void handleIntent(Intent intent) {
         long[] values = intent.getLongArrayExtra(LIMITEREXTRA);
-        if (values != null) for (long l : values) requestLimiter.add(l);
-        canRequest();
-
-        //apply settings
-        /*/
-        String extra = intent.getStringExtra(SettingsActivity.SETTINGDEFAULTSEARCH);
-        if (extra != null) database.setValue(SettingsActivity.SETTINGDEFAULTSEARCH, extra);
-        String[] tmp = intent.getStringArrayExtra(SettingsActivity.SETTINGBLACKLIST);
-        if (tmp != null && tmp.length > 0) database.setStringArray(SettingsActivity.SETTINGBLACKLIST, tmp);
-        extra = intent.getStringExtra(SettingsActivity.SETTINGBASEURL);
-        if (extra != null) database.setValue(SettingsActivity.SETTINGBASEURL, extra);
-        /*/
+        if (values != null) for (long l : values) MiscStatics.addRequestTO(l);
+        MiscStatics.canRequest(this);//too clear the list
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState){
         super.onSaveInstanceState(outState);
-        if (requestLimiter.size()>0) {
-            long[] vals = new long[requestLimiter.size()];
-            for (int i = 0; i < requestLimiter.size(); i++) vals[i] = (long) requestLimiter.get(i);
+        List<Long> rhist = MiscStatics.getRequestHistory();
+        if (rhist.size()>0) {
+            long[] vals = new long[rhist.size()];
+            for (int i = 0; i < rhist.size(); i++) vals[i] = (long) rhist.get(i);
             outState.putLongArray(LIMITEREXTRA, vals);
         }
     }
@@ -100,10 +77,16 @@ public class DrawerWrapper extends AppCompatActivity
         if (database != null) { database.close(); database = null; }
     }
 
-    @Override
-    public void onTrimMemory(int level) {
+    @Override public void onTrimMemory(int level) {
         super.onTrimMemory(level);
-        WebImageView.clear();
+        Logger.getLogger("a621").info("Memory running on level " + level);
+        if (level>=TRIM_MEMORY_RUNNING_MODERATE) MiscStatics.clearMem(this);
+    }
+
+    @Override public void onLowMemory() {
+        super.onLowMemory();
+        Logger.getLogger("a621").info("Memory running low: cleaning...");
+        MiscStatics.clearMem(this);
     }
 
     protected void onCreateDrawer() {

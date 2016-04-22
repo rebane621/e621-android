@@ -1,12 +1,48 @@
 package de.e621.rebane;
 
+import android.content.Context;
+import android.widget.Toast;
+
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
+
+import de.e621.rebane.components.WebImageView;
 
 /**
  * Created by Michael on 17.04.2016.
  */
 public class MiscStatics {
+
+    private static int maxRequests = 30;
+    private static List<Long> requestLimiter = new LinkedList<Long>();
+    private static long limiterlasttoast=0; //to prevent toast spamming
+    public static boolean canRequest(Context context) {
+        List<Long> remove = new ArrayList<Long>();
+        for (Long l : requestLimiter)
+            if (System.currentTimeMillis()-l > 60000)
+                remove.add(l);
+        requestLimiter.removeAll(remove);
+
+        if (requestLimiter.size() < maxRequests) {
+            requestLimiter.add(System.currentTimeMillis());
+            return true;
+        }
+        long now = System.currentTimeMillis();
+        if (now-limiterlasttoast > 3000) {
+            Toast.makeText(context, "Too many requests!\nPlease don't stress the Server this much", Toast.LENGTH_SHORT).show();
+            limiterlasttoast = now;
+        }
+        return false;
+    }
+    public static void addRequestTO(long time) {
+        requestLimiter.add(time);
+    }
+    public static List<Long> getRequestHistory() {
+        return requestLimiter;
+    }
 
     public static String getRankString(int level) {
         int[] lvl = new int[] {0, 10, 20, 30, 33, 34, 35, 40, 50};
@@ -48,7 +84,7 @@ public class MiscStatics {
         return res;
     }
 
-    public static String parseDText(String raw) {
-        return raw;
+    public static void clearMem(Context context) {
+        WebImageView.cleanUp(context);
     }
 }
