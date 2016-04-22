@@ -1,10 +1,7 @@
 package de.e621.rebane;
 
 import android.content.Context;
-import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;

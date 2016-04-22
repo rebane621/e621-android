@@ -3,6 +3,7 @@ package de.e621.rebane.activities;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -10,16 +11,16 @@ import android.text.Html;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
+import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -37,8 +38,12 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
     ImageView bnMore, bnComments;
     View postInfo, postComments, layMore;
+
     TouchImageView imgImage;
     WebView swfImage;
+//    WebImageView gifImage;
+    VideoView webmImage;
+
     ListView lstTags, lstComments;
     public static final String EXTRAPOSTDATA = "PostShowXMLNodeExtraObject";
     XMLNode data;
@@ -60,8 +65,10 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         layMore =                       findViewById(R.id.listMore);
         postInfo =                      findViewById(R.id.viewPostInfo);
         postComments =                  findViewById(R.id.viewPostComments);
-        imgImage = (TouchImageView) findViewById(R.id.imageView);
-        swfImage =  (WebView)        findViewById(R.id.swfView);
+        imgImage =  (TouchImageView)    findViewById(R.id.imageView);
+        swfImage =  (WebView)           findViewById(R.id.swfView);
+//        gifImage =  (WebImageView)      findViewById(R.id.gifView);
+        webmImage = (VideoView)         findViewById(R.id.videoView);
         lstTags =   (ListView)          findViewById(R.id.lstTags);
         lstComments = (ListView)        findViewById(R.id.lstComments);
         bnMore.setOnClickListener(this);
@@ -82,6 +89,15 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         ws.setUserAgentString(getResources().getString(R.string.requestUserAgent));
 
         swfImage.setDrawingCacheBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+
+        webmImage.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.seekTo(0);
+                mediaPlayer.start();
+            }
+        });
+
+       // webmImage.setDrawingCacheBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
 
         data = (XMLNode)getIntent().getSerializableExtra(EXTRAPOSTDATA);
         if (baseURL == null) baseURL = DrawerWrapper.baseURL;
@@ -104,10 +120,19 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 if (type.equalsIgnoreCase("swf")) {
                     swfImage.setVisibility(View.VISIBLE);
                     swfImage.loadUrl(data.getFirstChildText("file_url"));
+                } else if (type.equalsIgnoreCase("webm")) {
+                    try {
+                        (findViewById(R.id.videoContainer)).setVisibility(View.VISIBLE);
+                        webmImage.setVideoPath(data.getFirstChildText("file_url"));
+                        webmImage.setMediaController(new MediaController(this));
+                        webmImage.start();
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Could not load webm\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
                 } else {
                     imgImage.setVisibility(View.VISIBLE);
                     imgImage.setPlaceholderImage(getResources().getDrawable(R.mipmap.thumb_loading));
-                    imgImage.setImageUrl(data.getFirstChildText("md5"), data.getFirstChildText("file_url"));
+                    imgImage.setImageUrl(data.getFirstChildText("md5"), data.getFirstChildText("file_url"), type.equalsIgnoreCase("gif"));
                 }
             }
             lstTags.setAdapter(new ArrayAdapter<String>(this, R.layout.singleline_listentry, data.getFirstChildText("tags").split(" ")));
@@ -129,7 +154,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
             String rating = data.getFirstChildText("rating").toUpperCase();
             int score = Integer.valueOf(data.getFirstChildText("score"));
             String url = data.getFirstChildText("source");
-            String statstext = "Source: " + (deleted ? " - " : HTMLformat.link(url, url)) +
+            String statstext = "Source: " + (deleted || url==null || url.isEmpty() ? " - " : HTMLformat.link(url, url)) +
                     "<br>Uploaded " + HTMLformat.colored(MiscStatics.readableTime(data.getFirstChildText("created_at")), Color.WHITE) + " by " + HTMLformat.colored(data.getFirstChildText("author"), Color.WHITE) +
                     "<br>Rating: " + HTMLformat.bold( HTMLformat.colored(rating, getResources().getColor("E".equals(rating) ? R.color.preview_red : ( "Q".equals(rating) ? R.color.preview_yellow : R.color.preview_green) )) ) +
                     "<br>Score: " + HTMLformat.colored(String.valueOf(score), score>0 ? getResources().getColor(R.color.preview_green) : ( score<0 ? getResources().getColor(R.color.preview_red) :Color.WHITE)) +

@@ -1,7 +1,5 @@
 package de.e621.rebane;
 
-import android.graphics.Color;
-
 import java.text.SimpleDateFormat;
 import java.util.logging.Logger;
 

@@ -8,13 +8,18 @@ import java.util.Map;
  * Could we maybe get a API call to receive the HTML result? Would that be easier for android Spanned stuff?
  */
 public class DTextParser {
-    public static String parse(String text) {
-        String html = text;
 
-        Map<String,String> bbMap = new HashMap<String , String>();
+    static Map<String,String> bbMap = null;
+
+    private static void initBBmap(){
+        if (bbMap != null) return;
+
+        bbMap = new HashMap<String , String>();
+
+        //escapes
+        bbMap.put("(\r\n|\r|\n|\n\r)", "<br>");
 
         //BBCode
-        bbMap.put("(\r\n|\r|\n|\n\r)", "<br>");
         bbMap.put("\\[b\\](.+?)\\[/b\\]", "<b>$1</b>");
         bbMap.put("\\[i\\](.+?)\\[/i\\]", "<i>$1</i>");
         bbMap.put("\\[u\\](.+?)\\[/u\\]", "<u>$1</u>");
@@ -34,6 +39,11 @@ public class DTextParser {
         bbMap.put("\\{\\{(.+?)\\}\\}", "<a href=\"https://e621.net/post/index?tags=$1\">$1</a>");
         bbMap.put("post #([0-9]+?)", "<a href=\"https://e621.net/post/show/$1\">post #$1</a>");
         bbMap.put("thumb #([0-9]+?)", "<a href=\"https://e621.net/post/show/$1\">thumb #$1</a>");
+    }
+
+    public static String parse(String text) {
+        String html = text;
+        initBBmap();
 
         for (Map.Entry entry: bbMap.entrySet()) {
             html = html.replaceAll(entry.getKey().toString(), entry.getValue().toString());

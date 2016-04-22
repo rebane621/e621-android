@@ -1,6 +1,5 @@
 package de.e621.rebane.components;
 
-import android.text.Html;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;

@@ -5,8 +5,8 @@ import android.content.Intent;
 import android.view.View;
 import android.widget.TextView;
 
-import de.e621.rebane.activities.PostShowActivity;
 import de.e621.rebane.a621.R;
+import de.e621.rebane.activities.PostShowActivity;
 import de.e621.rebane.xmlreader.XMLNode;
 
 public class ThumbnailViewHolder {
@@ -47,10 +47,7 @@ public class ThumbnailViewHolder {
             previewImage.setImageDrawable(context.getResources().getDrawable(R.mipmap.thumb_webm));
         else {
             previewImage.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_loading));
-            //if (Integer.valueOf(data.getFirstChildText("height"))/1.33 > Integer.valueOf(data.getFirstChildText("width")))
-            //    tmp = "sample_url";//medium quality for long posts
-            //else tmp = "preview_url";
-            previewImage.setImageUrl(data.getFirstChildText("md5")+"th", data.getChildrenByTagName(imageQuality)[0].getInnerText());
+            previewImage.setImageUrl(data.getFirstChildText("md5")+"th", data.getChildrenByTagName(imageQuality)[0].getInnerText(), false);
         }
 
         boolean isParent = Boolean.parseBoolean(data.getFirstChildText("has_children"));

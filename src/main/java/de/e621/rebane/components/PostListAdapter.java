@@ -8,7 +8,6 @@ import android.widget.ArrayAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import de.e621.rebane.a621.R;
 import de.e621.rebane.xmlreader.XMLNode;

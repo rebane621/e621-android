@@ -4,7 +4,6 @@ import android.content.Context;
 
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.xmlreader.XMLNode;
 
 /**
  * Created by Michael on 18.04.2016.
