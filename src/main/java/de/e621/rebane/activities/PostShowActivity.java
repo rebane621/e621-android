@@ -13,6 +13,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -22,8 +23,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import de.e621.rebane.HTMLformat;
 import de.e621.rebane.MiscStatics;
@@ -50,10 +53,14 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
     CommentListAdapter results = null;
     String baseURL = null;
 
-    String swfhtml = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"></head><body style='margin:0; pading:0; background-color: black;'>" +
-            "<embed style='width:100%; height:100%' src='@@@URL@@@' " +
-            "autoplay='true' quality='high' bgcolor='#152f56' align='middle' allowScriptAccess='*' allowFullScreen='true' " +
-            "type='application/x-shockwave-flash' pluginspage='http://www.macromedia.com/go/getflashplayer' /></body></html>";
+    String swfhtml = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"></head><body style='margin:0; pading:0; background-color: #152f56;'>" +
+            "<object classid=\"clsid:d27cdb6e-ae6d-11cf-96b8-444553540000\" codebase=\"http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0\" width=\"100%\" height=\"100%\" id=\"flashcontainer\" align=\"middle\">\n" +
+            "<param name=\"allowScriptAccess\" value=\"sameDomain\">\n" +
+            "<param name=\"movie\" value=\"@@@URL@@@\">\n" +
+            "<param name=\"quality\" value=\"high\">\n" +
+            "<param name=\"bgcolor\" value=\"#152f56\">\n" +
+            "<embed src=\"@@@URL@@@\" quality=\"high\" bgcolor=\"#152f56\" width=\"600\" height=\"450\" name=\"flashcontainer\" align=\"middle\" allowscriptaccess=\"sameDomain\" type=\"application/x-shockwave-flash\" pluginspage=\"http://www.macromedia.com/go/getflashplayer\">\n" +
+            "</object></body></html>";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +73,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         postInfo =                      findViewById(R.id.viewPostInfo);
         postComments =                  findViewById(R.id.viewPostComments);
         imgImage =  (TouchImageView)    findViewById(R.id.imageView);
-        swfImage =  (WebView)           findViewById(R.id.swfView);
+        swfImage =  (WebView)   findViewById(R.id.swfView);
 //        gifImage =  (WebImageView)      findViewById(R.id.gifView);
         webmImage = (VideoView)         findViewById(R.id.videoView);
         lstTags =   (ListView)          findViewById(R.id.lstTags);
@@ -74,21 +81,36 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         bnMore.setOnClickListener(this);
         bnComments.setOnClickListener(this);
 
+        //swfImage.setDrawingCacheBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+        swfImage.setLayerType(View.LAYER_TYPE_HARDWARE, null);  //for flash
+        swfImage.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                view.loadUrl(url);
+                return true;
+            }
+        });
+
         WebSettings ws = swfImage.getSettings();
 
+        ws.setCacheMode(WebSettings.LOAD_NO_CACHE);
         ws.setJavaScriptEnabled(true);
-        ws.setPluginState(WebSettings.PluginState.ON);
         ws.setAllowFileAccess(true);
+        ws.setPluginState(WebSettings.PluginState.ON);
 
         ws.setBuiltInZoomControls(true);
         ws.setSupportZoom(true);
-        ws.setDisplayZoomControls(false); //ab API 11
+        ws.setDisplayZoomControls(false);
 
         ws.setUseWideViewPort(true);
         ws.setLoadWithOverviewMode(true);
-        ws.setUserAgentString(getResources().getString(R.string.requestUserAgent));
-
-        swfImage.setDrawingCacheBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+        ws.setUserAgentString("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/534.36 (KHTML, like Gecko) Chrome/13.0.766.0 Safari/534.36");
+        //ws.setUserAgentString(getResources().getString(R.string.requestUserAgent));
+        try{
+            Class cl=Class.forName("android.webkit.WebSettings");
+            Method mthd=cl.getMethod("setFlashPlayerEnabled",Boolean.TYPE);
+            mthd.invoke(swfImage.getSettings(),true);
+        }catch(Exception e){ e.printStackTrace(); }
 
         webmImage.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override public void onCompletion(MediaPlayer mediaPlayer) {
@@ -119,7 +141,10 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 type = data.getFirstChildText("file_ext");
                 if (type.equalsIgnoreCase("swf")) {
                     swfImage.setVisibility(View.VISIBLE);
-                    swfImage.loadUrl(data.getFirstChildText("file_url"));
+                    String innerHTML = swfhtml.replaceAll("@@@URL@@@", data.getFirstChildText("file_url"));
+                    Logger.getLogger("a621").info("Inner HTML: " + innerHTML);
+                    swfImage.loadData(innerHTML, "text/html", "utf-8");
+                    //swfImage.loadUrl(data.getFirstChildText("file_url"));
                 } else if (type.equalsIgnoreCase("webm")) {
                     try {
                         (findViewById(R.id.videoContainer)).setVisibility(View.VISIBLE);
