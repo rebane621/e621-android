@@ -29,7 +29,7 @@
             <item
                 android:id="@+id/nav_login"
                 android:icon="@drawable/ic_menu_login"
-                android:title="Login"/>
+                android:title="Sign in"/>
             <item
                 android:id="@+id/nav_dmail"
                 android:icon="@drawable/ic_menu_dmail"

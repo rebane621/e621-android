@@ -6,12 +6,17 @@
 
     <application
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:hardwareAccelerated="true"
-        > <!--hardware acceleration for flash -->
+        android:theme="@style/AppTheme">
+
+        <service
+            android:name="de.e621.rebane.service.DMailService"
+            android:exported="false"/>
+
+        <!-- hardware acceleration for flash -->
         <activity
             android:name="de.e621.rebane.activities.PostsActivity"
             android:label="@string/app_name"
@@ -43,6 +48,12 @@
             android:label="@string/title_posts"
             android:launchMode="singleTop"
             android:parentActivityName="de.e621.rebane.activities.PostsActivity">
+        </activity>
+        <activity
+            android:name="de.e621.rebane.activities.LoginActivity"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="@string/title_activity_login">
         </activity>
     </application>
 

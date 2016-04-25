@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 public class SQLiteDB {
 	private SQLiteDatabase database;
 	private SQLhelper dbHelper;
+    private Context context;
 
     /** Erzeugt eine Neue instanz. Es sollte immer nur eine Instanz gleichzeitig verwendet werden<br>
      * Jedoch ist das hohlen des Context über einen Konstruktor wesentlich angenehmer ;)<br>
@@ -33,12 +34,18 @@ public class SQLiteDB {
      * wieder geschlossen werden.
      * */
 	public SQLiteDB(Context context) {
-		dbHelper = new SQLhelper(context);
+		dbHelper = new SQLhelper(this.context = context);
 	}
 
     /** Öffnet die Datenbank - nach der bearbeitung .close() nicht vergessen */
 	public void open() throws SQLException {
-		database = dbHelper.getWritableDatabase();
+        try {
+            if (database == null || !database.isOpen())
+                database = dbHelper.getWritableDatabase();
+        } catch (Exception e) {
+            dbHelper = new SQLhelper(context);
+            database = dbHelper.getReadableDatabase();
+        }
 	}
 
     /** Schließt die datenbank.<br>Ich bin mir nicht sicher, ob überhaupt ein Fehler auftritt, wenn man

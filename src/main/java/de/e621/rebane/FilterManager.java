@@ -26,8 +26,8 @@ public class FilterManager {
     }
 
     public List<XMLNode> proxyBlacklist(List<XMLNode> toCheck) {
-        Logger.getLogger("a621").info("Blacklist: ");
-        for (String bl : Blacklist) Logger.getLogger("a621").info(bl);
+        //Logger.getLogger("a621").info("Blacklist: ");
+        //for (String bl : Blacklist) Logger.getLogger("a621").info(bl);
         for (XMLNode node : toCheck) {
             isBlacklisted(node);
         }

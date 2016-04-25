@@ -2,8 +2,13 @@ package de.e621.rebane.activities;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -23,7 +28,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -34,8 +45,10 @@ import de.e621.rebane.a621.R;
 import de.e621.rebane.components.CommentListAdapter;
 import de.e621.rebane.components.DTextView;
 import de.e621.rebane.components.TouchImageView;
+import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLTask;
+import pl.droidsonroids.gif.GifDrawable;
 
 public class PostShowActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -114,6 +127,8 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
         webmImage.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override public void onCompletion(MediaPlayer mediaPlayer) {
+                //mediaPlayer.setLooping(true);
+                mediaPlayer.stop();
                 mediaPlayer.seekTo(0);
                 mediaPlayer.start();
             }
@@ -138,6 +153,14 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 imgImage.setVisibility(View.VISIBLE);
                 imgImage.setPlaceholderImage(getResources().getDrawable(R.mipmap.thumb_deleted));
             } else {
+                double frp = MiscStatics.freeRamPerc(); long frb = MiscStatics.freeRamB();
+                String quality = "file_url"; int fsz = Integer.valueOf(data.getFirstChildText("file_size"));
+                if (frp < 50) MiscStatics.clearMem(this, fsz/(1024*1024), 50.0);
+                //image requires more than 80% of the total available ram
+                if (frb*0.8<fsz) WebImageView.clear();   //purge everything, we need it
+                //image would require more than 90% of the total available ram
+                //if (frb*0.9<fsz) quality = "sample_url"; //reduce quality
+
                 type = data.getFirstChildText("file_ext");
                 if (type.equalsIgnoreCase("swf")) {
                     swfImage.setVisibility(View.VISIBLE);
@@ -148,8 +171,15 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 } else if (type.equalsIgnoreCase("webm")) {
                     try {
                         (findViewById(R.id.videoContainer)).setVisibility(View.VISIBLE);
+                        //new VideoCacher(data.getFirstChildText("md5"), data.getFirstChildText("file_url")){
+                        //    @Override protected void onPostExecute(File file) {
+                        //        webmImage.setVideoPath(file.getAbsolutePath());
+                        //        webmImage.start();
+                        //    }
+                        //}.execute();
                         webmImage.setVideoPath(data.getFirstChildText("file_url"));
-                        webmImage.setMediaController(new MediaController(this));
+                        MediaController mct = new MediaController(this);
+                        webmImage.setMediaController(mct);
                         webmImage.start();
                     } catch (Exception e) {
                         Toast.makeText(this, "Could not load webm\n" + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -157,7 +187,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 } else {
                     imgImage.setVisibility(View.VISIBLE);
                     imgImage.setPlaceholderImage(getResources().getDrawable(R.mipmap.thumb_loading));
-                    imgImage.setImageUrl(data.getFirstChildText("md5"), data.getFirstChildText("file_url"), type.equalsIgnoreCase("gif"));
+                    imgImage.setImageUrl(data.getFirstChildText("md5"), data.getFirstChildText(quality), true);
                 }
             }
             lstTags.setAdapter(new ArrayAdapter<String>(this, R.layout.singleline_listentry, data.getFirstChildText("tags").split(" ")));
@@ -286,5 +316,55 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
     }
     public void quickToast(CharSequence message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    private abstract class VideoCacher extends AsyncTask<Void, Void, File> {
+        String vid, url, userAgent;
+        Context context;
+        public VideoCacher(String vid, String url) {
+            this.url = url;
+            this.vid = vid;
+            userAgent = (context = PostShowActivity.this.getApplicationContext()).getResources().getString(R.string.requestUserAgent);
+        }
+        @Override protected File doInBackground(Void... voids) {
+            try {
+                HttpURLConnection urlc = (HttpURLConnection) new URL(url).openConnection();
+                urlc.setRequestMethod("GET");
+                urlc.addRequestProperty("User-Agent", userAgent);
+                BufferedInputStream bis = new BufferedInputStream(urlc.getInputStream());
+
+                int count;
+                OutputStream output = null;
+                //int lenghtOfFile = urlc.getContentLength();
+                boolean success=false;
+                File cache = new File (context.getCacheDir(), vid+".webm");
+                if (cache.exists()) cache.delete(); // re downloading it...
+                try {
+                    Logger.getLogger("a621").info("Chaching video to " + cache.getAbsolutePath());
+                    //output = new FileOutputStream(cache.getAbsolutePath());
+                    output = new FileOutputStream(cache);
+
+                    byte data[] = new byte[1024];
+
+                    while ((count = bis.read(data)) != -1) {
+                        output.write(data, 0, count);
+                    }
+                    output.flush();
+                    success=true;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    try { output.close(); } catch (Exception e) {}
+                    try { bis.close(); } catch (Exception e) {}
+                }
+                if (!success) return null;
+                return cache;
+            } catch (Exception exc) {
+                exc.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override protected abstract void onPostExecute(File file);
     }
 }

@@ -182,8 +182,8 @@ public class PostsActivity extends DrawerWrapper
         openDB();
         baseURL = database.getValue(SettingsActivity.SETTINGBASEURL);
         if (baseURL == null || baseURL.isEmpty() || !baseURL.startsWith("https")) database.setValue(SettingsActivity.SETTINGBASEURL, baseURL = "https://e621.net/");
-        String quality = database.getValue(SettingsActivity.SETTINGSPREVIEWQUALITY);
-        if (quality == null || quality.isEmpty()) database.setValue(SettingsActivity.SETTINGSPREVIEWQUALITY, quality = "preview_url");
+        String quality = database.getValue(SettingsActivity.SETTINGPREVIEWQUALITY);
+        if (quality == null || quality.isEmpty()) database.setValue(SettingsActivity.SETTINGPREVIEWQUALITY, quality = "preview_url");
 
         Logger.getLogger("a621").info("Requesting page "+ baseURL +"post/index.xml?tags="+escapedQuery+"&page="+ page + "&limit="+pagesize);
 
@@ -216,7 +216,7 @@ public class PostsActivity extends DrawerWrapper
                 lstPosts.refreshDrawableState();
 
             }
-        }).execute( baseURL +"post/index.xml?tags="+escapedQuery+"&page="+ page + "&limit="+pagesize);
+        }).execute( baseURL +"post/index.xml?tags="+escapedQuery+"&page="+ page + "&limit=" + pagesize + login.getLogin("&"));
     }
 
     @Override

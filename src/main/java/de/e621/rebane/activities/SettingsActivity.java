@@ -1,10 +1,12 @@
 package de.e621.rebane.activities;
 
+import android.app.AlarmManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
 
@@ -13,6 +15,7 @@ import java.net.URLEncoder;
 
 import de.e621.rebane.FilterManager;
 import de.e621.rebane.a621.R;
+import de.e621.rebane.service.DMailService;
 
 public class SettingsActivity extends DrawerWrapper
         implements View.OnClickListener {
@@ -22,10 +25,11 @@ public class SettingsActivity extends DrawerWrapper
     public final static String SETTINGBLACKLIST = "AppPostBlacklist";
     public final static String SETTINGBASEURL = "AppBaseWebUrl";
     public final static String SETTINGPOSTSPERPAGE = "AppPostsPerPage";
-    public final static String SETTINGSPREVIEWQUALITY = "AppPreviewImageQuality";
+    public final static String SETTINGPREVIEWQUALITY = "AppPreviewImageQuality";
+    public final static String SETTINGDMAILSERVICE = "BackgroundDMailService";
 
     EditText txtDefaultSearch, txtBlacklist, txtBaseURL, txtPostPage;
-    Switch chkQuality;
+    Switch chkQuality, chkDMail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +43,7 @@ public class SettingsActivity extends DrawerWrapper
         txtBaseURL =        (EditText)  findViewById(R.id.txtBaseURL);
         txtPostPage =       (EditText)  findViewById(R.id.txtPostsPerPage);
         chkQuality =        (Switch)    findViewById(R.id.chkQuality);
+        chkDMail =          (Switch)    findViewById(R.id.chkDMail);
         ((Button)findViewById(R.id.bnApply)).setOnClickListener(this);
 
         String extra = database.getValue(SETTINGDEFAULTSEARCH);
@@ -70,9 +75,15 @@ public class SettingsActivity extends DrawerWrapper
             }
         }
         txtPostPage.setText(String.valueOf(pagesize));
-        extra = database.getValue(SETTINGSPREVIEWQUALITY);
-        if (extra == null || extra.isEmpty()) database.setValue(SETTINGSPREVIEWQUALITY, extra = "preview_url");
+        extra = database.getValue(SETTINGPREVIEWQUALITY);
+        if (extra == null || extra.isEmpty()) database.setValue(SETTINGPREVIEWQUALITY, extra = "preview_url");
+        chkQuality.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                compoundButton.setText((b?"Acceptable":"Mashed Potato"));
+            }
+        });
         chkQuality.setChecked(extra.equals("sample_url"));
+        chkDMail.setChecked(Boolean.parseBoolean(database.getValue(SETTINGDMAILSERVICE)));
 
         handleIntent(getIntent());
     }
@@ -96,7 +107,12 @@ public class SettingsActivity extends DrawerWrapper
             int pagesize = Integer.valueOf(txtPostPage.getText().toString());
             if (pagesize < 1 || pagesize > 100) pagesize = 100;
             database.setValue(SETTINGPOSTSPERPAGE, String.valueOf(pagesize));
-            database.setValue(SETTINGSPREVIEWQUALITY, (chkQuality.isChecked()?"sample_url":"preview_url"));
+            database.setValue(SETTINGPREVIEWQUALITY, (chkQuality.isChecked()?"sample_url":"preview_url"));
+            database.setValue(SETTINGDMAILSERVICE, String.valueOf(chkDMail.isChecked()));
+            if (!chkDMail.isChecked()) {    //settings was turned off
+                DMailService.stop();
+            }
+
             finish();
         }
     }

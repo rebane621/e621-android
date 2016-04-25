@@ -47,7 +47,7 @@ public class ThumbnailViewHolder {
             previewImage.setImageDrawable(context.getResources().getDrawable(R.mipmap.thumb_webm));
         else {
             previewImage.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_loading));
-            previewImage.setImageUrl(data.getFirstChildText("md5")+"th", data.getChildrenByTagName(imageQuality)[0].getInnerText(), false);
+            previewImage.setImageUrl(data.getFirstChildText("md5")+"th", data.getFirstChildText(imageQuality), false);
         }
 
         boolean isParent = Boolean.parseBoolean(data.getFirstChildText("has_children"));

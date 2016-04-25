@@ -88,33 +88,38 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
     private static boolean cleanupisrunning=false; private static int cleanmaxage=60; //by default clear only images older than 60 seconds
     private static long lastcleantime = 0;
     public static void cleanUp(Context context) {
+        cleanUp(context, 10, 25); // only clear if less than 10 MiB or 25% are available
+    }
+    public static void cleanUp(Context context, int WantFreeMiB, double WantFreePercent) {
         if (cleanupisrunning) return; cleanupisrunning=true;
         //chkmem
-        // used mem = total mem - free mem
-        // total free mem (because the heap can expand and free mem is related to the current heap (total mem), not the max heap):
-        // max heap - used mem = max heap - (total mem - free mem)
-        Runtime rt = Runtime.getRuntime();
         long now = System.currentTimeMillis()/1000;
         List<String> marked;
-        long freeRam = (rt.maxMemory()-(rt.totalMemory()-rt.freeMemory()))/(1024*1024), freePerc = freeRam*100/(rt.maxMemory()/(1024*1024));
+        long freeRam = MiscStatics.freeRamB()/(1024*1024); double freePerc = MiscStatics.freeRamPerc();
         Logger.getLogger("a621").info("Cleaning (" + cleanmaxage + ")- free ram: " + freeRam + " MiB (" + freePerc + " %)");
-        if (freeRam < 10 || freePerc < 25) { // only clear if less than 10 MiB or 25% are available
-            marked = new LinkedList<String>();
-            for (Map.Entry<String, Long> e : webImageUsage.entrySet())
-                if (now - e.getValue() > cleanmaxage)
-                    marked.add(e.getKey());
-            for (String iid : marked) {
-                webImageUsage.remove(iid);
-                webImageCache.remove(iid);
-            }
-            marked.clear();
-            marked=null;
+        if (freeRam < WantFreeMiB || freePerc < WantFreePercent) {
+            int rem = 0;
+            int override = 0;
+            do {
+                marked = new LinkedList<String>();
+                for (Map.Entry<String, Long> e : webImageUsage.entrySet())
+                    if (now - e.getValue() > cleanmaxage - override)
+                        marked.add(e.getKey());
+                for (String iid : marked) {
+                    webImageUsage.remove(iid);
+                    webImageCache.remove(iid);
+                }
+                rem += marked.size();
+                marked.clear();
+                marked = null;
+                override += 5;
+            } while (rem < 5 && !webImageCache.isEmpty()); //we're supposed to clean up stuff, so let's at least free 5 images
             //if (cleanmaxage > 5) cleanmaxage-=5; //in case 60 secs was too big of a time span, recude by 5 seconds and retry
             //set max post age to freemem * 60 sec
             cleanmaxage = (int)(60*freePerc/100);
             if (cleanmaxage < 5) { cleanmaxage=5; }
-            rt.gc();
-            if (freePerc < 5) Toast.makeText(context, "Free RAM for this app is below 5 MiB!", Toast.LENGTH_SHORT).show();
+            Runtime.getRuntime().gc();
+            if (freeRam < 5) Toast.makeText(context, "Image Cache:\nFree RAM < 5 MiB!", Toast.LENGTH_SHORT).show();
         } else {
             if (now-lastcleantime > cleanmaxage) {    //grant some more space every CLEANINGMAXAGE seconds, if the ram was ok, so if you're browsing slow, it's cleaning even slower
                 if (cleanmaxage <= 55) cleanmaxage += 5;
@@ -124,14 +129,14 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
         cleanupisrunning=false;
     }
 
-    public void setImageUrl(String iid, String url, boolean gif) {
+    public void setImageUrl(String iid, String url, boolean cache) {
         if (!webImageCache.containsKey(iid)) {
             if (!reqIids.contains(iid)) {
                 if (!MiscStatics.canRequest(getContext())) return;
                 reqIids.add(iid);
                 Logger.getLogger("a621").info("Downloading " + iid);
-                DownloadTask task = new DownloadTask(gif);
-                task.execute(iid, url, getContext().getCacheDir().getAbsolutePath());
+                DownloadTask task = new DownloadTask();
+                task.execute(iid, url, (cache ? getContext().getCacheDir().getAbsolutePath() : null));
                 cleanUp(getContext());
             }
         } else {
@@ -143,38 +148,34 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
         }
     }
 
+    //execute args: image id (for result) , url , cache path (omit or null to don't cache)
     class DownloadTask extends AsyncTask<String, Void, Drawable> {
         String url;
         String iid;
-        boolean gif;
-        String cacheDir;
-
-        public DownloadTask() {
-            gif = false;
-        }
-        public DownloadTask(boolean gif) {
-            this.gif = gif;
-        }
+        boolean gif = false;
+        String cacheDir = null;
 
         @Override
         protected Drawable doInBackground(String... params) {
             iid = params[0];
             url = params[1];
             if (params.length>2) cacheDir=params[2];
-
+            String fext = url.substring(url.lastIndexOf('.'));
+            gif = fext.equals(".gif");
             try {
                 HttpURLConnection urlc = (HttpURLConnection) new URL(url).openConnection();
                 urlc.setRequestMethod("GET");
                 urlc.addRequestProperty("User-Agent", userAgent);
                 BufferedInputStream bis = new BufferedInputStream(urlc.getInputStream());
-                if (gif) {
+                if (cacheDir != null) {
                     int count;
                     OutputStream output = null;
                     //int lenghtOfFile = urlc.getContentLength();
                     boolean success=false;
-                    File cache = File.createTempFile(iid, "gif", new File(cacheDir));//new File(cacheDir ,iid+".gif");
+                    File cache = new File (cacheDir, iid+fext); //File.createTempFile(iid, fext, new File(cacheDir));//new File(cacheDir ,iid+".gif");
+                    if (cache.exists()) cache.delete(); // re downloading it...
                     try {
-                        Logger.getLogger("a621").info("Chaching gif to " + cache.getCanonicalPath());
+                        Logger.getLogger("a621").info("Chaching image to " + cache.getAbsolutePath());
                         //output = new FileOutputStream(cache.getAbsolutePath());
                         output = new FileOutputStream(cache);
 
@@ -192,12 +193,14 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
                         try { bis.close(); } catch (Exception e) {}
                     }
                     if (!success) return null;
-                    return new GifDrawable( cache );
+                    Logger.getLogger("a621").info("Image is gif? " + gif + ", " + fext);
+                    return (gif ? new GifDrawable( cache ) : new BitmapDrawable( cache.getAbsolutePath() ) );
                 } else {
                     Bitmap staticImg = BitmapFactory.decodeStream(bis);
                     return (staticImg == null ? null : new BitmapDrawable(staticImg));
                 }
             } catch (Exception exc) {
+                exc.printStackTrace();
                 return null;
             }
         }
@@ -205,13 +208,13 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
         @Override
         protected void onPostExecute(Drawable result) {
             if (result != null) {
-                Logger.getLogger("a621").info("Storing " + iid + "...");
                 if (sUseCache) {
+                    Logger.getLogger("a621").info("Storing " + iid + "...");
                     WebImageView.webImageCache.put(iid, result);
                     WebImageView.webImageUsage.put(iid, System.currentTimeMillis()/1000);
                 }
                 WebImageView.this.setImageDrawable(result);
-                if (gif) {
+                if (gif && cacheDir != null) {  //if cachedir is null we can't have a gif at hand, see code above
                     GifDrawable rr = (GifDrawable) result;
                     rr.setLoopCount(0);
                     rr.start();

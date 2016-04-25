@@ -1,15 +1,21 @@
 package de.e621.rebane.activities;
 
+import android.app.Activity;
+import android.app.AlarmManager;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -18,15 +24,18 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import de.e621.rebane.FilterManager;
+import de.e621.rebane.LoginManager;
 import de.e621.rebane.MiscStatics;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.WebImageView;
+import de.e621.rebane.service.DMailService;
 
 public class DrawerWrapper extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     FilterManager blacklist;
+    LoginManager login;
     public static SQLiteDB database = null;
     public static String baseURL;
     public static Class<? extends DrawerWrapper> openActivity;
@@ -57,24 +66,39 @@ public class DrawerWrapper extends AppCompatActivity
         blacklist = new FilterManager(this, database.getStringArray(SettingsActivity.SETTINGBLACKLIST));
         baseURL = database.getValue(SettingsActivity.SETTINGBASEURL);
         //eventually get login and other data
+        login = LoginManager.getInstance(this, database);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         openDB();
+
+        //to be able to respond to settings, the following is here:
+        //start smail service
+        DMailService.makeAlarmIntent(this);  //important
+        //starting is actually pointless if we're not logged in
+        if (!DMailService.isRunning() && Boolean.parseBoolean(database.getValue(SettingsActivity.SETTINGDMAILSERVICE)) && login.isLoggedIn()) {
+            Logger.getLogger("a621").info("Starting DMail service");
+            Intent mServiceIntent = new Intent(this, DMailService.class);
+            //mServiceIntent.setData(Uri.parse(dataUrl));
+            mServiceIntent.putExtra(DMailService.DMAILLOGINEXTRA, login.getLogin());
+            startService(mServiceIntent);
+        } else if (DMailService.isRunning()) {
+            Logger.getLogger("a621").info("DMail Service is running");
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (database != null) { database.close(); database = null; }
+        //if (database != null) { database.close(); database = null; }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (database != null) { database.close(); database = null; }
+        //if (database != null) { database.close(); database = null; }
     }
 
     @Override public void onTrimMemory(int level) {
@@ -94,7 +118,7 @@ public class DrawerWrapper extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        exDrawerListener toggle = new exDrawerListener(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
@@ -103,6 +127,31 @@ public class DrawerWrapper extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
+    private class exDrawerListener extends  ActionBarDrawerToggle implements DrawerLayout.DrawerListener {
+        public exDrawerListener(Activity activity, DrawerLayout drawerLayout, @StringRes int openDrawerContentDescRes, @StringRes int closeDrawerContentDescRes) {
+            super(activity, drawerLayout, openDrawerContentDescRes, closeDrawerContentDescRes);
+        }
+
+        public exDrawerListener(Activity activity, DrawerLayout drawerLayout, Toolbar toolbar, @StringRes int openDrawerContentDescRes, @StringRes int closeDrawerContentDescRes) {
+            super(activity, drawerLayout, toolbar, openDrawerContentDescRes, closeDrawerContentDescRes);
+        }
+
+        @Override public void onDrawerSlide(View drawerView, float slideOffset) {
+        }
+
+        @Override public void onDrawerOpened(View drawerView) {
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            Menu menu = navigationView.getMenu();
+            MenuItem nav_login = menu.findItem(R.id.nav_login);
+            nav_login.setTitle(login.isLoggedIn() ? "Log out" : "Sign in");
+        }
+
+        @Override public void onDrawerClosed(View drawerView) {
+        }
+
+        @Override public void onDrawerStateChanged(int newState) {
+        }
+    }
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -165,7 +214,14 @@ public class DrawerWrapper extends AppCompatActivity
         } else if (id == R.id.nav_forum) {
 
         } else if (id == R.id.nav_login) {
-
+            if (!login.isLoggedIn()) {
+                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                this.startActivity(intent);
+            } else {
+                login.logout();
+                Toast.makeText(this, "Logged out...", Toast.LENGTH_SHORT).show();
+                item.setTitle("Sign in");
+            }
         } else if (id == R.id.nav_dmail) {
 
         }

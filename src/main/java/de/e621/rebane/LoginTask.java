@@ -31,7 +31,7 @@ public abstract class LoginTask extends AsyncTask<String, Void, Boolean> {
     @Override protected Boolean doInBackground(String... login) {
 
         String url = db.getValue(SettingsActivity.SETTINGBASEURL);
-        url += "user/login.xml?name=" + login[0] + "&password=" + login[1]; //m0n0s0d1um/glut4m4t3
+        url += "user/login.xml?name=" + login[0] + "&password=" + login[1];
         XMLReader reader = new XMLReader();
         boolean ret = false;
         try {
@@ -52,7 +52,8 @@ public abstract class LoginTask extends AsyncTask<String, Void, Boolean> {
                 Toast.makeText(context, result.getAttribute("type"), Toast.LENGTH_LONG).show();
                 ret = false;
             } else {
-                String hash = result.getChildren()[1].getAttribute("password_hash");
+                XMLNode c = result.children().get(0);
+                String hash = c.getAttribute("password_hash");
                 TakeMyLoginString = "login="+login[0]+"&password_hash="+hash;
                 db.setValue("password", hash);
                 ret = true;

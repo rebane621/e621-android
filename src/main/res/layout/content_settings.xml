@@ -108,7 +108,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/settings_postsperpage"
+                android:text="@string/settings_previewquality"
                 android:id="@+id/textView11"
                 android:textColor="@color/text_neutral"
                 android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
@@ -120,14 +120,35 @@
             <Switch
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="New Switch"
+                android:text="Mashed Potato "
                 android:id="@+id/chkQuality"
                 android:layout_centerVertical="true"
                 android:layout_alignParentEnd="true"
                 android:layout_gravity="right"
                 android:textColor="@color/text_neutral"
-                android:textOff="Mashed Potato "
-                android:textOn="Acceptable"/>
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_backgroundservice"
+                android:id="@+id/textView13"
+                android:textColor="@color/text_neutral"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="0dp"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="0dp"/>
+
+            <Switch
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Check DMail when signed in "
+                android:id="@+id/chkDMail"
+                android:layout_centerVertical="true"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="right"
+                android:textColor="@color/text_neutral"/>
 
             <Button
                 android:layout_width="wrap_content"
