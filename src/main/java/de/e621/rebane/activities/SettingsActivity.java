@@ -1,8 +1,10 @@
 package de.e621.rebane.activities;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
@@ -10,6 +12,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
 
+import java.io.File;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 
@@ -27,8 +30,9 @@ public class SettingsActivity extends DrawerWrapper
     public final static String SETTINGPOSTSPERPAGE = "AppPostsPerPage";
     public final static String SETTINGPREVIEWQUALITY = "AppPreviewImageQuality";
     public final static String SETTINGDMAILSERVICE = "BackgroundDMailService";
+    public final static String SETTINGDEFAULTSAVE = "AddDefauleSaveLocation";
 
-    EditText txtDefaultSearch, txtBlacklist, txtBaseURL, txtPostPage;
+    EditText txtDefaultSearch, txtBlacklist, txtBaseURL, txtPostPage, txtDefaultSave;
     Switch chkQuality, chkDMail;
 
     @Override
@@ -42,6 +46,7 @@ public class SettingsActivity extends DrawerWrapper
         txtBlacklist =      (EditText)  findViewById(R.id.txtBlacklist);
         txtBaseURL =        (EditText)  findViewById(R.id.txtBaseURL);
         txtPostPage =       (EditText)  findViewById(R.id.txtPostsPerPage);
+        txtDefaultSave =    (EditText)  findViewById(R.id.txtDefaultSave);
         chkQuality =        (Switch)    findViewById(R.id.chkQuality);
         chkDMail =          (Switch)    findViewById(R.id.chkDMail);
         ((Button)findViewById(R.id.bnApply)).setOnClickListener(this);
@@ -75,6 +80,10 @@ public class SettingsActivity extends DrawerWrapper
             }
         }
         txtPostPage.setText(String.valueOf(pagesize));
+        extra = database.getValue(SETTINGDEFAULTSAVE);
+        if (extra == null || extra.isEmpty()) database.setValue(SETTINGDEFAULTSAVE, extra = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "e621").getAbsolutePath());
+        txtDefaultSave.setText(extra);
+        txtDefaultSave.setOnClickListener(this);
         extra = database.getValue(SETTINGPREVIEWQUALITY);
         if (extra == null || extra.isEmpty()) database.setValue(SETTINGPREVIEWQUALITY, extra = "preview_url");
         chkQuality.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -95,7 +104,11 @@ public class SettingsActivity extends DrawerWrapper
 
     @Override
     public void onClick(View view) {
-        if (view.getId() == R.id.bnApply) {
+        if (view.getId() == R.id.txtDefaultSave) {
+            Intent fchooser = new Intent(this, FolderChooser.class);
+            fchooser.putExtra(FolderChooser.FOLDERINTENTEXTRA, txtDefaultSave.getText().toString());
+            startActivityForResult(fchooser, 1);
+        } else if (view.getId() == R.id.bnApply) {
             openDB();
             database.setValue(SETTINGDEFAULTSEARCH, URLEncoder.encode(txtDefaultSearch.getText().toString()));
             String[] tmp = txtBlacklist.getText().toString().split("\n");
@@ -107,13 +120,26 @@ public class SettingsActivity extends DrawerWrapper
             int pagesize = Integer.valueOf(txtPostPage.getText().toString());
             if (pagesize < 1 || pagesize > 100) pagesize = 100;
             database.setValue(SETTINGPOSTSPERPAGE, String.valueOf(pagesize));
+            database.setValue(SETTINGDEFAULTSAVE, txtDefaultSave.getText().toString());
             database.setValue(SETTINGPREVIEWQUALITY, (chkQuality.isChecked()?"sample_url":"preview_url"));
             database.setValue(SETTINGDMAILSERVICE, String.valueOf(chkDMail.isChecked()));
             if (!chkDMail.isChecked()) {    //settings was turned off
                 DMailService.stop();
             }
-
+            database.close();
             finish();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) {
+            if(resultCode == Activity.RESULT_OK){
+                String result=data.getStringExtra(FolderChooser.FOLDERINTENTEXTRA);
+                if (result != null) txtDefaultSave.setText(result);
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                //nothing changes
+            }
         }
     }
 }

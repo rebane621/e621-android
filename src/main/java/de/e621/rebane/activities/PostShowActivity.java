@@ -1,18 +1,20 @@
 package de.e621.rebane.activities;
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -30,7 +32,9 @@ import android.widget.VideoView;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
@@ -41,6 +45,7 @@ import java.util.logging.Logger;
 
 import de.e621.rebane.HTMLformat;
 import de.e621.rebane.MiscStatics;
+import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.CommentListAdapter;
 import de.e621.rebane.components.DTextView;
@@ -48,7 +53,6 @@ import de.e621.rebane.components.TouchImageView;
 import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLTask;
-import pl.droidsonroids.gif.GifDrawable;
 
 public class PostShowActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -59,12 +63,14 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
     WebView swfImage;
 //    WebImageView gifImage;
     VideoView webmImage;
+    long VideoDuration;
 
     ListView lstTags, lstComments;
     public static final String EXTRAPOSTDATA = "PostShowXMLNodeExtraObject";
     XMLNode data;
     CommentListAdapter results = null;
     String baseURL = null;
+    String saveAs = null;
 
     String swfhtml = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"></head><body style='margin:0; pading:0; background-color: #152f56;'>" +
             "<object classid=\"clsid:d27cdb6e-ae6d-11cf-96b8-444553540000\" codebase=\"http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0\" width=\"100%\" height=\"100%\" id=\"flashcontainer\" align=\"middle\">\n" +
@@ -125,12 +131,19 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
             mthd.invoke(swfImage.getSettings(),true);
         }catch(Exception e){ e.printStackTrace(); }
 
-        webmImage.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override public void onCompletion(MediaPlayer mediaPlayer) {
-                //mediaPlayer.setLooping(true);
+        webmImage.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            public void onPrepared(MediaPlayer mp) {
+                //VideoDuration = webmImage.getDuration();
+                webmImage.requestFocus();
+                webmImage.start();
+                mp.setLooping(true);
+            }
+        });
+        webmImage.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override public boolean onError(MediaPlayer mediaPlayer, int i, int i1) {
                 mediaPlayer.stop();
-                mediaPlayer.seekTo(0);
-                mediaPlayer.start();
+                mediaPlayer.reset();
+                return false;
             }
         });
 
@@ -138,6 +151,12 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
         data = (XMLNode)getIntent().getSerializableExtra(EXTRAPOSTDATA);
         if (baseURL == null) baseURL = DrawerWrapper.baseURL;
+
+        SQLiteDB database = new SQLiteDB(this);
+        database.open();
+        saveAs = database.getValue(SettingsActivity.SETTINGDEFAULTSAVE);
+        /*even if saveAs == null*/
+        database.close();
     }
 
     @Override
@@ -153,13 +172,19 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 imgImage.setVisibility(View.VISIBLE);
                 imgImage.setPlaceholderImage(getResources().getDrawable(R.mipmap.thumb_deleted));
             } else {
-                double frp = MiscStatics.freeRamPerc(); long frb = MiscStatics.freeRamB();
-                String quality = "file_url"; int fsz = Integer.valueOf(data.getFirstChildText("file_size"));
-                if (frp < 50) MiscStatics.clearMem(this, fsz/(1024*1024), 50.0);
+                double frp = MiscStatics.freeRamPerc();
+                long frb = MiscStatics.freeRamB();
+                String quality = "file_url";
+                int fsz = Integer.valueOf(data.getFirstChildText("file_size"));
+                //if (frp < 50)
+                    MiscStatics.clearMem(this, fsz / (1024 * 1024), 50.0);
                 //image requires more than 80% of the total available ram
-                if (frb*0.8<fsz) WebImageView.clear();   //purge everything, we need it
+                if (frb * 0.8 < fsz) WebImageView.clear();   //purge everything, we need it
                 //image would require more than 90% of the total available ram
-                //if (frb*0.9<fsz) quality = "sample_url"; //reduce quality
+                if (frb-(8*1024*1024)<fsz) {    //try to leave 8 MiB for the rest of the app
+                    quality = "sample_url"; //reduce quality if low on ram
+                    quickToast("Had to load lower res");
+                }
 
                 type = data.getFirstChildText("file_ext");
                 if (type.equalsIgnoreCase("swf")) {
@@ -177,10 +202,10 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                         //        webmImage.start();
                         //    }
                         //}.execute();
-                        webmImage.setVideoPath(data.getFirstChildText("file_url"));
-                        MediaController mct = new MediaController(this);
+                        webmImage.setVideoURI(Uri.parse(data.getFirstChildText("file_url")));
+                        //webmImage.start();
+                        MediaController mct = new MediaController(PostShowActivity.this);
                         webmImage.setMediaController(mct);
-                        webmImage.start();
                     } catch (Exception e) {
                         Toast.makeText(this, "Could not load webm\n" + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
@@ -314,6 +339,46 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         } else
             super.onBackPressed();
     }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        if (findViewById(R.id.videoContainer).getVisibility()== View.VISIBLE) {
+            savedInstanceState.putInt("Position", webmImage.getCurrentPosition());
+            webmImage.pause();
+        }
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Integer position = savedInstanceState.getInt("Position");
+        if (position != null) webmImage.seekTo(position);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.postshow, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_saveas) {
+            if (imgImage.getVisibility()!=View.VISIBLE || imgImage.getCachedPath() == null) {
+                quickToast("Can't save image");
+                return true;
+            }
+            Intent fchooser = new Intent(this, FolderChooser.class);
+            if (saveAs != null) fchooser.putExtra(FolderChooser.FOLDERINTENTEXTRA, saveAs);
+            startActivityForResult(fchooser, 1); //response code 1 for saveAs result
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
     public void quickToast(CharSequence message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
@@ -366,5 +431,41 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         }
 
         @Override protected abstract void onPostExecute(File file);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) { //saveAs result
+            if(resultCode == Activity.RESULT_OK) {
+                String saveLoc = data.getStringExtra(FolderChooser.FOLDERINTENTEXTRA);
+                if (saveLoc == null) {
+                    quickToast("Invalid Directory!");
+                }
+                String imgPath = imgImage.getCachedPath();
+                try {
+                    InputStream in = new FileInputStream(new File(imgPath));
+                    File saveFile = new File(saveLoc, imgPath.substring(imgPath.lastIndexOf('/')));
+                    Logger.getLogger("a621").info(saveFile.getAbsolutePath());
+                    OutputStream out = new FileOutputStream(saveFile);
+
+                    // Transfer bytes from in to out
+                    byte[] buf = new byte[1024];
+                    int len;
+                    while ((len = in.read(buf)) > 0) {
+                        out.write(buf, 0, len);
+                    }
+                    in.close();
+                    out.flush();
+                    out.close();
+                } catch (Exception e) {
+                    quickToast("Can't save file:\n"+e.getMessage());
+                    e.printStackTrace();
+                    return;
+                }
+                quickToast("File saved!");
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                //nothing changes
+            }
+        }
     }
 }

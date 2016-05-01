@@ -17,6 +17,7 @@ public class LoginManager {
     Context context;
     SQLiteDB db;
     static String URLappendix = null;
+    static String username = null;
     static Boolean loggedIn = false;
     static Boolean isBusy = false;
 
@@ -37,6 +38,7 @@ public class LoginManager {
             String user = db.getValue("username");
             if (hash == null || user == null || hash.isEmpty() || user.isEmpty()) return null;
             URLappendix = "login=" + user + "&password_hash=" + hash;
+            username = user;
             loggedIn = true;
         }
         return URLappendix;
@@ -54,34 +56,41 @@ public class LoginManager {
     /** attempts to log in, if no other request is already running
      * On success getLogin() will not return null
      */
-    public void login(String username, String password, final View pbar, final Activity closeme) {
+    public void login(final String loginname, String password, final View pbar, final Activity closeme) {
         if (isBusy) return; isBusy=true;
 
         pbar.setVisibility(View.VISIBLE);
         db.open();
-        db.setValue("username", username);
+        db.setValue("username", loginname);
         (new LoginTask(context, db, context.getResources().getString(R.string.requestUserAgent)){
             @Override protected void onPostExecute(Boolean result) {
                 if (result) {
                     URLappendix = TakeMyLoginString;
+                    username = loginname;
                     Toast.makeText(context, "Login Successfull!", Toast.LENGTH_SHORT).show();
                     try { closeme.finish(); } catch (Exception e) {e.printStackTrace();} // catch in case closeme is null or activity already closed
                 } else {
                     URLappendix = null;
+                    username = null;
                     Toast.makeText(context, "Incorrect Username/Passwod!", Toast.LENGTH_SHORT).show();
                 }
                 loggedIn = result;
                 isBusy=false;
                 try { pbar.setVisibility(View.GONE); } catch (Exception e) {}   // catch in case activity was closed
             }
-        }).execute(username, password);
+        }).execute(loginname, password);
     }
 
     public void logout() {
         URLappendix = null;
+        username = null;
         loggedIn = false;
         db.setValue("password", "");
         db.setValue("username", "");
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     private static LoginManager instance = null;

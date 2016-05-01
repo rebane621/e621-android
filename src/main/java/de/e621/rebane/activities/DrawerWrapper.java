@@ -16,6 +16,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -143,7 +144,10 @@ public class DrawerWrapper extends AppCompatActivity
             NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
             Menu menu = navigationView.getMenu();
             MenuItem nav_login = menu.findItem(R.id.nav_login);
-            nav_login.setTitle(login.isLoggedIn() ? "Log out" : "Sign in");
+            boolean loggedIn = login.isLoggedIn();
+            nav_login.setTitle(loggedIn ? "Log out" : "Sign in");
+            TextView tv = (TextView) findViewById(R.id.drawerLoginName);
+            tv.setText(loggedIn?login.getUsername():"Guest");
         }
 
         @Override public void onDrawerClosed(View drawerView) {

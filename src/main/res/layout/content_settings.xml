@@ -108,6 +108,30 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="@string/settings_savefolder"
+                android:id="@+id/textView"
+                android:textColor="@color/text_neutral"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_savefolderdesc"
+                android:id="@+id/textView14"
+                android:textColor="@color/text_neutral"/>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/txtDefaultSave"
+                android:textColor="@android:color/white"
+                android:clickable="true"
+                android:editable="false"
+                android:inputType="none"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/settings_previewquality"
                 android:id="@+id/textView11"
                 android:textColor="@color/text_neutral"

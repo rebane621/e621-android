@@ -3,6 +3,7 @@
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -11,7 +12,6 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <service
             android:name="de.e621.rebane.service.DMailService"
             android:exported="false"/>
@@ -51,9 +51,12 @@
         </activity>
         <activity
             android:name="de.e621.rebane.activities.LoginActivity"
+            android:label="@string/title_activity_login"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:label="@string/title_activity_login">
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity android:name="de.e621.rebane.activities.FolderChooser"
+                  android:label="@string/title_folder_chooser">
         </activity>
     </application>
 

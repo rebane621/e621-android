@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:tools="http://schemas.android.com/tools"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      tools:context="de.e621.rebane.activities.PostShowActivity">
+
+    <item android:id="@+id/action_saveas"
+          android:title="SaveAs"
+          android:icon="@drawable/ic_action_saveas"
+          app:showAsAction="collapseActionView|ifRoom"
+          />
+</menu>

@@ -146,7 +146,9 @@
             android:id="@+id/lstComments"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"/>
+            android:layout_alignParentStart="true"
+            android:dividerHeight="4dp"
+            android:layout_margin="3dp"/>
 
     </RelativeLayout>
 

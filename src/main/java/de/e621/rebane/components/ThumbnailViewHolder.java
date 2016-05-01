@@ -14,9 +14,7 @@ public class ThumbnailViewHolder {
     TextView txtLeft, txtMid, txtRight;
 
     String imageQuality;
-    public ThumbnailViewHolder(String quality) {
-        imageQuality = quality;
-    }
+    public ThumbnailViewHolder(String quality) { imageQuality = quality; }
 
     public void populate(int position, View convertView, final XMLNode data) {
         previewImage = (WebImageView) convertView.findViewById(R.id.previewImage);

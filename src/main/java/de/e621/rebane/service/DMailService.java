@@ -88,7 +88,10 @@ public class DMailService extends IntentService {
             int cnt = 0;
             StringBuilder cont = new StringBuilder();
             for (XMLNode msg : result.getChildren()) {
-                if (!Boolean.valueOf(msg.getFirstChildText("has-seen"))) {
+                if (!msg.getType().equals("dmail")) { cnt = 0; break; }
+                //Logger.getLogger("a621").info ("DMail: " + msg.toString());
+                Boolean seen = Boolean.parseBoolean(msg.getFirstChildText("has-seen"));
+                if (!seen) {
                     cnt++;
                     cont.append(msg.getFirstChildText("title") + "\n");
                 }

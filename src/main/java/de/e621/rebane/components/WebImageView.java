@@ -40,6 +40,8 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
     private boolean sUseCache;
 
     String url = null;
+    String cachedPath=null;
+    public String getCachedPath() { return cachedPath; }
 
     public WebImageView(Context context) {
         this(context, null, 0);
@@ -119,7 +121,7 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
             cleanmaxage = (int)(60*freePerc/100);
             if (cleanmaxage < 5) { cleanmaxage=5; }
             Runtime.getRuntime().gc();
-            if (freeRam < 5) Toast.makeText(context, "Image Cache:\nFree RAM < 5 MiB!", Toast.LENGTH_SHORT).show();
+            if (freeRam < 8) Toast.makeText(context, "Image Cache:\nFree RAM < 8 MiB!", Toast.LENGTH_SHORT).show();
         } else {
             if (now-lastcleantime > cleanmaxage) {    //grant some more space every CLEANINGMAXAGE seconds, if the ram was ok, so if you're browsing slow, it's cleaning even slower
                 if (cleanmaxage <= 55) cleanmaxage += 5;
@@ -136,7 +138,7 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
                 reqIids.add(iid);
                 Logger.getLogger("a621").info("Downloading " + iid);
                 DownloadTask task = new DownloadTask();
-                task.execute(iid, url, (cache ? getContext().getCacheDir().getAbsolutePath() : null));
+                task.execute(iid, url, (cache ? getContext().getCacheDir().getAbsolutePath() : null)); //have at least 16 MiB RAM for the app to cache
                 cleanUp(getContext());
             }
         } else {
@@ -185,6 +187,7 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
                             output.write(data, 0, count);
                         }
                         output.flush();
+                        cachedPath = cache.getAbsolutePath();
                         success=true;
                     } catch (Exception e) {
                         e.printStackTrace();
