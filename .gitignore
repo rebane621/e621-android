@@ -33,3 +33,5 @@ captures/
 
 # ignore my XML reader ;)
 src/main/java/de/e621/rebane/xmlreader/*.java
+!src/main/java/de/e621/rebane/xmlreader/XMLTask.java
+!src/main/java/de/e621/rebane/xmlreader/IXMLNode.java
