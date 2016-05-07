@@ -7,41 +7,35 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import de.e621.rebane.FilterManager;
-import de.e621.rebane.MiscStatics;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.xmlreader.XMLNode;
 
-public class CommentListAdapter extends ArrayAdapter<XMLNode> {
+public class ForumListAdapter extends ArrayAdapter<XMLNode> {
     private List<XMLNode> list = null;
+    private String quality;
     public int svNumPosts=0;
-    public boolean canPaginateNext(int page, int pagesize) { return ((page-1)*pagesize + list.size() < svNumPosts); }
-    public boolean canPaginateLast(int page) { return page > 1; }
-    FilterManager blacklist;
-    String baseURL;
-    boolean postLoad;
-    public CommentListAdapter(Context context, int textViewResourceId, List<XMLNode> rowDataList, String baseURL, FilterManager avatarFilter, boolean postLoadUserdata) {
+    /*/public int getLastPage(int pagesize) {
+        int max = (int)Math.ceil((double)svNumPosts/(double)pagesize);
+        return max;
+    }/*/
+
+    public ForumListAdapter(Context context, int textViewResourceId, List<XMLNode> rowDataList) {
         super(context, textViewResourceId, rowDataList);
         this.list = new ArrayList<XMLNode>();
         this.list.addAll(rowDataList);
-        CommentViewHolder.resetAuthorData();
-        blacklist = avatarFilter;
-        this.baseURL = baseURL;
-        postLoad = postLoadUserdata;
     }
 
     public int getResultCount() { return (list==null ? 0 : list.size()); }
     public XMLNode getResult(int i) { return (list==null ? null : list.get(i)); }
 
-    public View getView(final int position, View convertView, ViewGroup parent) {
 
-        CommentViewHolder holder = new CommentViewHolder(getContext(), baseURL, blacklist, postLoad, this);
+    public View getView(final int position, View convertView, ViewGroup parent) {
+        ForumViewHolder holder = new ForumViewHolder();
+
         LayoutInflater inflator = LayoutInflater.from(parent.getContext());
-        convertView = inflator.inflate(R.layout.comment_layout, parent, false);
+        convertView = inflator.inflate(R.layout.forumtopic_layout, parent, false);
 
         holder.populate(position, convertView, list.get(position));
 

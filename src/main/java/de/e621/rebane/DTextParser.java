@@ -6,6 +6,9 @@ import java.util.Map;
 /**
  * Finish this class ... sometime... plz?
  * Could we maybe get a API call to receive the HTML result? Would that be easier for android Spanned stuff?
+ *
+ * You might also want to take a look at this:
+ * https://commonsware.com/blog/Android/2010/05/26/html-tags-supported-by-textview.html
  */
 public class DTextParser {
 

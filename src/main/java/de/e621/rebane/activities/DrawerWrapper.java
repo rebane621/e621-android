@@ -35,7 +35,7 @@ import de.e621.rebane.service.DMailService;
 public class DrawerWrapper extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    FilterManager blacklist;
+    FilterManager blacklist = null;
     LoginManager login;
     public static SQLiteDB database = null;
     public static String baseURL;
@@ -64,7 +64,7 @@ public class DrawerWrapper extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         openDB();
-        blacklist = new FilterManager(this, database.getStringArray(SettingsActivity.SETTINGBLACKLIST));
+        //blacklist = new FilterManager(this, database.getStringArray(SettingsActivity.SETTINGBLACKLIST));
         baseURL = database.getValue(SettingsActivity.SETTINGBASEURL);
         //eventually get login and other data
         login = LoginManager.getInstance(this, database);
@@ -76,8 +76,8 @@ public class DrawerWrapper extends AppCompatActivity
         openDB();
 
         //to be able to respond to settings, the following is here:
-        //start smail service
-        DMailService.makeAlarmIntent(this);  //important
+        blacklist = new FilterManager(this, database.getStringArray(SettingsActivity.SETTINGBLACKLIST));
+
         //starting is actually pointless if we're not logged in
         if (!DMailService.isRunning() && Boolean.parseBoolean(database.getValue(SettingsActivity.SETTINGDMAILSERVICE)) && login.isLoggedIn()) {
             Logger.getLogger("a621").info("Starting DMail service");
@@ -215,8 +215,9 @@ public class DrawerWrapper extends AppCompatActivity
 
         } else if (id == R.id.nav_blips) {
 
-        } else if (id == R.id.nav_forum) {
-
+        } else if (id == R.id.nav_forum && !openActivity.equals(ForumsActivity.class)) {
+            Intent intent = new Intent(getApplicationContext(), ForumsActivity.class);
+            this.startActivity(intent);
         } else if (id == R.id.nav_login) {
             if (!login.isLoggedIn()) {
                 Intent intent = new Intent(getApplicationContext(), LoginActivity.class);

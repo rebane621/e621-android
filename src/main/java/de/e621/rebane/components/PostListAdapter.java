@@ -33,7 +33,7 @@ public class PostListAdapter extends ArrayAdapter<XMLNode> {
 
 
     public View getView(final int position, View convertView, ViewGroup parent) {
-        ThumbnailViewHolder holder = new ThumbnailViewHolder(quality);
+        ThumbnailViewHolder holder = new ThumbnailViewHolder(quality, this);
 
         LayoutInflater inflator = LayoutInflater.from(parent.getContext());
         convertView = inflator.inflate(R.layout.preview_layout, parent, false);

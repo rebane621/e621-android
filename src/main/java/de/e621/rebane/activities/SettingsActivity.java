@@ -31,9 +31,10 @@ public class SettingsActivity extends DrawerWrapper
     public final static String SETTINGPREVIEWQUALITY = "AppPreviewImageQuality";
     public final static String SETTINGDMAILSERVICE = "BackgroundDMailService";
     public final static String SETTINGDEFAULTSAVE = "AddDefauleSaveLocation";
+    public final static String SETTINGFANCYCOMMENTS = "AppLoadUserdataOnComments";
 
     EditText txtDefaultSearch, txtBlacklist, txtBaseURL, txtPostPage, txtDefaultSave;
-    Switch chkQuality, chkDMail;
+    Switch chkQuality, chkDMail, chkFancyComments;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +50,7 @@ public class SettingsActivity extends DrawerWrapper
         txtDefaultSave =    (EditText)  findViewById(R.id.txtDefaultSave);
         chkQuality =        (Switch)    findViewById(R.id.chkQuality);
         chkDMail =          (Switch)    findViewById(R.id.chkDMail);
+        chkFancyComments =  (Switch)    findViewById(R.id.chkFancyComments);
         ((Button)findViewById(R.id.bnApply)).setOnClickListener(this);
 
         String extra = database.getValue(SETTINGDEFAULTSEARCH);
@@ -93,6 +95,7 @@ public class SettingsActivity extends DrawerWrapper
         });
         chkQuality.setChecked(extra.equals("sample_url"));
         chkDMail.setChecked(Boolean.parseBoolean(database.getValue(SETTINGDMAILSERVICE)));
+        chkFancyComments.setChecked(Boolean.parseBoolean(database.getValue(SETTINGFANCYCOMMENTS)));
 
         handleIntent(getIntent());
     }
@@ -126,7 +129,8 @@ public class SettingsActivity extends DrawerWrapper
             if (!chkDMail.isChecked()) {    //settings was turned off
                 DMailService.stop();
             }
-            database.close();
+            database.setValue(SETTINGFANCYCOMMENTS, String.valueOf(chkFancyComments.isChecked()));
+            //database.close();
             finish();
         }
     }

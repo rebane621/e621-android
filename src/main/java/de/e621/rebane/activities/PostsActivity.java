@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -34,7 +35,7 @@ import de.e621.rebane.xmlreader.XMLTask;
 public class PostsActivity extends DrawerWrapper
         implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
 
-    ListView lstPosts;
+    GridView lstPosts;
     PostListAdapter results = null;
     LinearLayout pagebar;
     ImageView pageNext, pageLast, pageFirst;
@@ -55,7 +56,7 @@ public class PostsActivity extends DrawerWrapper
 
         Logger.getLogger("a621").info("Activity created");
 
-        lstPosts =      (ListView)              findViewById(R.id.lstPostResults);
+        lstPosts =      (GridView)              findViewById(R.id.lstPostResults);
         swipeLayout =   (SwipeRefreshLayout)    findViewById(R.id.swipe_container);
         pagebar =       (LinearLayout)          findViewById(R.id.pagebar);
 
@@ -177,7 +178,7 @@ public class PostsActivity extends DrawerWrapper
     }
 
     void searchPosts(String escapedQuery, int page) {
-        if (!MiscStatics.canRequest(this)) return;
+        if (!MiscStatics.canRequest(this) || swipeLayout.isRefreshing()) return;
 
         openDB();
         baseURL = database.getValue(SettingsActivity.SETTINGBASEURL);
@@ -274,17 +275,17 @@ public class PostsActivity extends DrawerWrapper
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.bnNext:
-                Logger.getLogger("a621").info("next " + (page+1));
+                //Logger.getLogger("a621").info("next " + (page+1));
                 if ((page-1)*pagesize + results.getResultCount() < results.svNumPosts)
                     searchPosts(query, page+1);
                 break;
             case R.id.bnLast:
-                Logger.getLogger("a621").info("last " + (page-1));
+                //Logger.getLogger("a621").info("last " + (page-1));
                 if (page > 2)
                     searchPosts(query, page-1);
                 break;
             case R.id.bnFirst:
-                Logger.getLogger("a621").info("jump 1");
+                //Logger.getLogger("a621").info("jump 1");
                 if (page > 1)
                     searchPosts(query, 1);
                 break;

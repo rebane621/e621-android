@@ -10,7 +10,9 @@ XMLNode might implement IXMLNode with IXMLNode providing documentation and funct
 Please note, that IXMLNode is just a sketch of XMLNode and it does not have to implement IXMLNode.
 I also recommend letting XMLNode inplement Cloneable and Serializable, tho I can't remember why I used them ;)
 Used constructor for XMLNode are the following where _type if the XML-Tagname and _parent is the parent Node.
+
 > public XMLNode(String _type, XMLNode _parent);
+>
 > public XMLNode(String _type);
 
-* Yea, I'm just too proud of it to share it ;P *
+*Yea, I'm just too proud of it to share it ;P*

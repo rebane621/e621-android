@@ -3,7 +3,10 @@ package de.e621.rebane.components;
 import android.content.Context;
 import android.content.Intent;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
+
+import java.lang.reflect.Array;
 
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.PostShowActivity;
@@ -12,9 +15,10 @@ import de.e621.rebane.xmlreader.XMLNode;
 public class ThumbnailViewHolder {
     WebImageView previewImage;
     TextView txtLeft, txtMid, txtRight;
+    ArrayAdapter<?> parentAdapter;
 
     String imageQuality;
-    public ThumbnailViewHolder(String quality) { imageQuality = quality; }
+    public ThumbnailViewHolder(String quality, ArrayAdapter parent) { imageQuality = quality; parentAdapter = parent; }
 
     public void populate(int position, View convertView, final XMLNode data) {
         previewImage = (WebImageView) convertView.findViewById(R.id.previewImage);
@@ -45,6 +49,7 @@ public class ThumbnailViewHolder {
             previewImage.setImageDrawable(context.getResources().getDrawable(R.mipmap.thumb_webm));
         else {
             previewImage.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_loading));
+            previewImage.setAdapter(parentAdapter);
             previewImage.setImageUrl(data.getFirstChildText("md5")+"th", data.getFirstChildText(imageQuality), false);
         }
 

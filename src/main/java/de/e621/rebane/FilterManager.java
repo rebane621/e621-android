@@ -37,7 +37,7 @@ public class FilterManager {
     public boolean isBlacklisted(XMLNode check) {
         boolean listed = false;
 
-        String tgs = check.getChildrenByTagName("tags")[0].getInnerText();
+        String tgs = check.getFirstChildText("tags");
         if ( !(tgs == null || tgs.isEmpty()) ) {
             for (String bl : Blacklist) {
                 //hastags && not filter applies

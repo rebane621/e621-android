@@ -25,8 +25,8 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentStart="true"
             android:layout_alignParentLeft="false"
-            android:numColumns="1"
-            />
+            android:numColumns="3"
+            android:gravity="center"/>
     </android.support.v4.widget.SwipeRefreshLayout>
 
     <LinearLayout

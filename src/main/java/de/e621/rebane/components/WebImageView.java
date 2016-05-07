@@ -9,6 +9,13 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
+import android.view.View;
+import android.view.ViewParent;
+import android.widget.Adapter;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.GridView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
@@ -33,6 +40,7 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
     public static Map<String, Long> webImageUsage = new HashMap<String, Long>();  //to help free ram
     static List<String> reqIids = new LinkedList<String>();
 
+    ArrayAdapter<?> adapter = null;
     public static void clear() { webImageCache.clear(); reqIids.clear(); }
 
     private Drawable mPlaceholder;
@@ -66,6 +74,10 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
         } finally {
             a.recycle();
         }
+    }
+
+    public void setAdapter(ArrayAdapter<?> ad) {
+        adapter=ad;
     }
 
     public void setPlaceholderImage(Drawable drawable) {
@@ -134,7 +146,7 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
     public void setImageUrl(String iid, String url, boolean cache) {
         if (!webImageCache.containsKey(iid)) {
             if (!reqIids.contains(iid)) {
-                if (!MiscStatics.canRequest(getContext())) return;
+                //if (!MiscStatics.canRequest(getContext())) return;    //may we ignore this here? I mean opening a index page on the browser laods about 70 thumbnails at once
                 reqIids.add(iid);
                 Logger.getLogger("a621").info("Downloading " + iid);
                 DownloadTask task = new DownloadTask();
@@ -146,6 +158,7 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
             uUsage(iid);    //update timestamp for this image
             Drawable resource = webImageCache.get(iid);
             setImageDrawable(webImageCache.get(iid));
+            updateDisplay();
             if (resource instanceof GifDrawable) ((GifDrawable)resource).start();
         }
     }
@@ -222,7 +235,8 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
                     rr.setLoopCount(0);
                     rr.start();
                 }
-                WebImageView.this.postInvalidate();
+                //WebImageView.this.postInvalidate();
+                updateDisplay();
 
                 if (reqIids.contains(iid)) reqIids.remove(iid);
             } else {
@@ -231,4 +245,11 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
         }
     };
 
+    void updateDisplay() {
+        View view = WebImageView.this;
+        View root = view.getRootView();
+        view.postInvalidate();
+        root.postInvalidate();
+        if (adapter != null) adapter.notifyDataSetChanged();    //only thing that truly worked here \(°v°)/ <3
+    }
 }

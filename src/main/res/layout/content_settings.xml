@@ -155,6 +155,28 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="@string/settings_savetrafic"
+                android:id="@+id/textView15"
+                android:textColor="@color/text_neutral"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="0dp"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="0dp"/>
+
+            <Switch
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Post-load user-data in comments"
+                android:id="@+id/chkFancyComments"
+                android:layout_centerVertical="true"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="right"
+                android:textColor="@color/text_neutral"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/settings_backgroundservice"
                 android:id="@+id/textView13"
                 android:textColor="@color/text_neutral"

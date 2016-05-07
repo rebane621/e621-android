@@ -45,16 +45,17 @@
 
     <ScrollView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:id="@+id/viewPostInfo"
-        android:visibility="gone">
+        android:visibility="gone"
+        android:background="@color/background_dim">
 
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="8dp"
-            android:background="@color/background_dim">
+            >
 
             <TextView
                 android:layout_width="wrap_content"
@@ -117,19 +118,22 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/bnFav"
-                    android:src="@mipmap/ic_img_fav_off"/>
+                    android:src="@mipmap/ic_img_fav_off"
+                    android:clickable="true"/>
 
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/bnRateUp"
-                    android:src="@mipmap/ic_img_rate_up_off"/>
+                    android:src="@mipmap/ic_img_rate_up_off"
+                    android:clickable="true"/>
 
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/bnRateDown"
-                    android:src="@mipmap/ic_img_rate_down_off"/>
+                    android:src="@mipmap/ic_img_rate_down_off"
+                    android:clickable="true"/>
             </LinearLayout>
 
         </LinearLayout>

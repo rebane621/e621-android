@@ -3,7 +3,7 @@
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -46,7 +46,6 @@
         <activity
             android:name="de.e621.rebane.activities.PostShowActivity"
             android:label="@string/title_posts"
-            android:launchMode="singleTop"
             android:parentActivityName="de.e621.rebane.activities.PostsActivity">
         </activity>
         <activity
@@ -55,8 +54,16 @@
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
-        <activity android:name="de.e621.rebane.activities.FolderChooser"
-                  android:label="@string/title_folder_chooser">
+        <activity
+            android:name="de.e621.rebane.activities.FolderChooser"
+            android:launchMode="singleTop"
+            android:label="@string/title_folder_chooser">
+        </activity>
+        <activity
+            android:name="de.e621.rebane.activities.ForumsActivity"
+            android:label="@string/title_forums"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar">
         </activity>
     </application>
 

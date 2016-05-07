@@ -31,7 +31,9 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:id="@+id/imgAvatar"
-                android:adjustViewBounds="true"/>
+                android:adjustViewBounds="true"
+                android:maxHeight="120dp"
+                android:maxWidth="100dp"/>
 
             <TextView
                 android:layout_width="match_parent"
