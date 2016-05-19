@@ -30,6 +30,11 @@
     <string name="settings_backgroundservice">Background Services</string>
     <string name="settings_savefolder">Default Save Location</string>
     <string name="settings_savefolderdesc">The default location to save files at. The folder chooser still openes when clicking the save icon, though you can just hit \'Use Folder\'</string>
+    <string name="settings_launchactivity">Launching Activity</string>
+    <string-array name="settings_launchactivityvals">
+        <item>Posts</item>
+        <item>Forums</item>
+    </string-array>
     <string name="title_activity_login">Sign in</string>
 
     <!-- Strings related to login -->

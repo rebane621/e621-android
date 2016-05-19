@@ -1,24 +1,33 @@
 package de.e621.rebane.components;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.lang.reflect.Array;
 
 import de.e621.rebane.a621.R;
+import de.e621.rebane.activities.FolderChooser;
 import de.e621.rebane.activities.PostShowActivity;
 import de.e621.rebane.xmlreader.XMLNode;
 
-public class ThumbnailViewHolder {
+public class PostListViewHolder {
     WebImageView previewImage;
     TextView txtLeft, txtMid, txtRight;
     ArrayAdapter<?> parentAdapter;
 
     String imageQuality;
-    public ThumbnailViewHolder(String quality, ArrayAdapter parent) { imageQuality = quality; parentAdapter = parent; }
+    public PostListViewHolder(String quality, ArrayAdapter parent) { imageQuality = quality; parentAdapter = parent; }
 
     public void populate(int position, View convertView, final XMLNode data) {
         previewImage = (WebImageView) convertView.findViewById(R.id.previewImage);
@@ -36,7 +45,12 @@ public class ThumbnailViewHolder {
                 view.getContext().startActivity(intent);
             }
         });
-
+        previewImage.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override public boolean onLongClick(View view) {
+                Toast.makeText(view.getContext(), "TODO: Open popup and ask the user for action", Toast.LENGTH_LONG).show();
+                return false;
+            }
+        });
 
         Context context = convertView.getContext();
         boolean isBlacklisted = Boolean.valueOf(data.getAttribute("Blacklisted"));
@@ -55,12 +69,14 @@ public class ThumbnailViewHolder {
 
         boolean isParent = Boolean.parseBoolean(data.getFirstChildText("has_children"));
         boolean isChild = !data.getChildrenByTagName("parent_id")[0].attributes().contains("nil");
-        if (isChild)
-            convertView.setBackground(context.getResources().getDrawable(R.drawable.thumb_bchild));
+        if ("pending".equals(data.getFirstChildText("status")))
+            convertView.setBackground(context.getResources().getDrawable(R.drawable.thumb_bpending));   //blue
+        else if (isChild)
+            convertView.setBackground(context.getResources().getDrawable(R.drawable.thumb_bchild));     //yellow
         else if (isParent)
-            convertView.setBackground(context.getResources().getDrawable(R.drawable.thumb_bparent));
+            convertView.setBackground(context.getResources().getDrawable(R.drawable.thumb_bparent));    //green
         else
-            convertView.setBackground(context.getResources().getDrawable(R.drawable.thumb_bnormal));
+            convertView.setBackground(context.getResources().getDrawable(R.drawable.thumb_bnormal));    //none
 
         int value = Integer.parseInt(data.getFirstChildText("score"));
         if (value < 0) txtLeft.setTextColor(context.getResources().getColor(R.color.preview_red));

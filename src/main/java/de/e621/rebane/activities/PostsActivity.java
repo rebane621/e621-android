@@ -32,79 +32,16 @@ import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLTask;
 
-public class PostsActivity extends DrawerWrapper
+public class PostsActivity extends PaginatedListActivity
         implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
 
-    GridView lstPosts;
-    PostListAdapter results = null;
-    LinearLayout pagebar;
-    ImageView pageNext, pageLast, pageFirst;
-    int page=1;
-    String query = "";
-    SwipeRefreshLayout swipeLayout;
     Menu menu = null;
-    static int pagesize = 15;
-
-    final static String SEARCHQUERYPAGE = "a621 SearchManager Post Page";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_posts);
-        onCreateDrawer();   //DrawerWrapper function that requires the layout to be set to prepare the drawer
-        DrawerWrapper.openActivity = this.getClass();   //block the drawer from reopening this activity while opened
-
-        Logger.getLogger("a621").info("Activity created");
-
-        lstPosts =      (GridView)              findViewById(R.id.lstPostResults);
-        swipeLayout =   (SwipeRefreshLayout)    findViewById(R.id.swipe_container);
-        pagebar =       (LinearLayout)          findViewById(R.id.pagebar);
-
-        (pageNext =     (ImageView)                findViewById(R.id.bnNext)).setOnClickListener(this);
-        (pageLast =     (ImageView)                findViewById(R.id.bnLast)).setOnClickListener(this);
-        (pageFirst =    (ImageView)                findViewById(R.id.bnFirst)).setOnClickListener(this);
-
-        lstPosts.setOnScrollListener(new AbsListView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(AbsListView absListView, int i) {
-
-            }
-
-            @Override
-            public void onScroll(AbsListView lv, int i, int i1, int i2) {
-                if (lstPosts == null || pagebar == null || results == null) return;
-
-                //boolean canNext = results.canPaginateNext(page, pagesize), canLast = results.canPaginateLast(page);
-                int lastPage = results.getLastPage(pagesize);
-
-                if (lv.getId() == R.id.lstPostResults) {
-                    if ((lstPosts.getFirstVisiblePosition()==0 || lstPosts.getLastVisiblePosition()>=results.getResultCount()-1) && (lastPage>1)) {
-                        if (pagebar.getVisibility()==View.GONE) {
-                            Animation bottomUp = AnimationUtils.loadAnimation(PostsActivity.this, R.anim.bottom_up);
-                            pagebar.startAnimation(bottomUp);
-                            pagebar.setVisibility(View.VISIBLE);
-                        }
-                    } else {
-                        if (pagebar.getVisibility()==View.VISIBLE) {
-                            Animation bottomDown = AnimationUtils.loadAnimation(PostsActivity.this, R.anim.bottom_down);
-                            pagebar.startAnimation(bottomDown);
-                            pagebar.setVisibility(View.GONE);
-                        }
-                    }
-                }
-            }
-        });
-        swipeLayout.setOnRefreshListener(this);
-        swipeLayout.setColorSchemeColors(getResources().getColor(R.color.colorAccent));
-
-        setPagesize();
-
-        handleIntent(getIntent());
-    }
-
-    @Override public void onRefresh() {
-        WebImageView.clear();   //in case a stream was interrupted, so it's propperly downloading
-        searchPosts(query, page);
+        postLayoutInflated(this.getClass());
     }
 
     void setPagesize() {
@@ -127,41 +64,6 @@ public class PostsActivity extends DrawerWrapper
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        Logger.getLogger("a621").info("Activity resumed");
-        setPagesize();
-    }
-
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else if (!query.equals("")) {
-            searchPosts("", 1);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        Logger.getLogger("a621").info("Activity got new intent");
-        results=null;
-        setIntent(intent);
-        handleIntent(intent);
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState){
-        super.onSaveInstanceState(outState);
-        outState.putInt(SEARCHQUERYPAGE, page);
-        outState.putString(SearchManager.QUERY, query);
-    }
-
-    @Override
     void handleIntent(Intent intent) {
         super.handleIntent(intent);
         page = intent.getIntExtra(SEARCHQUERYPAGE,1);
@@ -177,52 +79,26 @@ public class PostsActivity extends DrawerWrapper
         if (results==null) searchPosts(query, page);
     }
 
+    @Override
     void searchPosts(String escapedQuery, int page) {
-        if (!MiscStatics.canRequest(this) || swipeLayout.isRefreshing()) return;
+        API_URI = "post/index.xml?tags="+escapedQuery+"&page="+ page + "&limit="+pagesize;
+        API_LOGIN = true;   //for vote meta search
 
-        openDB();
-        baseURL = database.getValue(SettingsActivity.SETTINGBASEURL);
-        if (baseURL == null || baseURL.isEmpty() || !baseURL.startsWith("https")) database.setValue(SettingsActivity.SETTINGBASEURL, baseURL = "https://e621.net/");
-        String quality = database.getValue(SettingsActivity.SETTINGPREVIEWQUALITY);
-        if (quality == null || quality.isEmpty()) database.setValue(SettingsActivity.SETTINGPREVIEWQUALITY, quality = "preview_url");
-
-        Logger.getLogger("a621").info("Requesting page "+ baseURL +"post/index.xml?tags="+escapedQuery+"&page="+ page + "&limit="+pagesize);
-
-        swipeLayout.setRefreshing(true);
-        final int _page = page;
-        final String _query = escapedQuery;
-        final String _quality = quality;
-
-        (new XMLTask(this) {
-            @Override
-            protected void onPostExecute(XMLNode result) {
-
-                swipeLayout.setRefreshing(false);
-                if (result == null) { quickToast("Error while request / parsing!"); return; }
-                if (result.getChildCount() <= 0) { quickToast("No results found..."); return; }
-
-                results = new PostListAdapter(getApplicationContext(), R.id.txtMid, blacklist.proxyBlacklist(result.children()), _quality);
-                results.svNumPosts = (result.attributes().contains("count") ? Integer.valueOf(result.getAttribute("count")) : 0);
-                PostsActivity.this.query = _query; PostsActivity.this.page = _page;
-
-                ActionBar ab = getSupportActionBar();
-                ab.setTitle(getResources().getString(R.string.title_posts) + " | " + _page);
-                ab.setSubtitle(URLDecoder.decode(_query));
-                //setTitle(getResources().getString(R.string.title_posts) + " " + _page + (_query.equals("")?" | *":" | "+XMLUtils.unescapeXML(_query)));
-
-                pageFirst.setVisibility(_page>1?View.VISIBLE:View.GONE);
-                pageLast.setVisibility(_page>2?View.VISIBLE:View.GONE);
-                pageNext.setVisibility(_page<results.getLastPage(pagesize)?View.VISIBLE:View.GONE);
-                lstPosts.setAdapter(results);
-                lstPosts.refreshDrawableState();
-
-            }
-        }).execute( baseURL +"post/index.xml?tags="+escapedQuery+"&page="+ page + "&limit=" + pagesize + login.getLogin("&"));
+        super.searchPosts(escapedQuery, page);
     }
 
-    @Override
-    public boolean onSearchRequested() {
-        return super.onSearchRequested();
+    void onSearchResult(XMLNode result, String query, int page) {
+        openDB();
+        String quality = database.getValue(SettingsActivity.SETTINGPREVIEWQUALITY);
+
+        results = new PostListAdapter(getApplicationContext(), R.id.txtMid, blacklist.proxyBlacklist(result.children()), quality);
+        results.svNumPosts = (result.attributes().contains("count") ? Integer.valueOf(result.getAttribute("count")) : 0);
+        PostsActivity.this.query = query; PostsActivity.this.page = page;
+
+        ActionBar ab = getSupportActionBar();
+        ab.setTitle(getResources().getString(R.string.title_posts) + " | " + page);
+        ab.setSubtitle(URLDecoder.decode(query));
+        //setTitle(getResources().getString(R.string.title_posts) + " " + _page + (_query.equals("")?" | *":" | "+XMLUtils.unescapeXML(_query)));
     }
 
     MenuItem searchMenuItem = null;
@@ -271,24 +147,4 @@ public class PostsActivity extends DrawerWrapper
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.bnNext:
-                //Logger.getLogger("a621").info("next " + (page+1));
-                if ((page-1)*pagesize + results.getResultCount() < results.svNumPosts)
-                    searchPosts(query, page+1);
-                break;
-            case R.id.bnLast:
-                //Logger.getLogger("a621").info("last " + (page-1));
-                if (page > 2)
-                    searchPosts(query, page-1);
-                break;
-            case R.id.bnFirst:
-                //Logger.getLogger("a621").info("jump 1");
-                if (page > 1)
-                    searchPosts(query, 1);
-                break;
-        }
-    }
 }

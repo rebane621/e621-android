@@ -41,6 +41,7 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -49,8 +50,11 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.e621.rebane.ActionRequest;
@@ -364,6 +368,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         Animation bottomDown = AnimationUtils.loadAnimation(this, R.anim.bottom_down);
         Animation bottomUp = AnimationUtils.loadAnimation(this, R.anim.bottom_up);
         ActionBar ab = getSupportActionBar();
+        Map<String, String> postData;
         switch(view.getId()) {
             case (R.id.bnMore):
                 layMore.startAnimation(bottomDown);
@@ -390,18 +395,40 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                     ab.setSubtitle(results.getResultCount() + " Comments");
                 break;
             case (R.id.bnRateUp):
-                new ActionRequest(this, lm.getLogin(), ActionRequest.POST_VOTE_UP, Integer.valueOf(data.getFirstChildText("id"))) {
-                    @Override public void onSuccess() {
-                        ((ImageView) findViewById(R.id.bnRateUp)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_up_on));
-                        ((ImageView) findViewById(R.id.bnRateDown)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_down_off));
+                postData = new HashMap<String, String>();
+                postData.put("id", data.getFirstChildText("id"));
+                postData.put("score", "1");
+                new ActionRequest(this, lm.getLogin(), ActionRequest.POST_VOTE_UP, postData) {
+                    @Override public void onSuccess(XMLNode result) {
+                        Integer c;
+                        try { c = Integer.parseInt(result.getFirstChildText("change")); }
+                        catch (Exception e) { c = 0; }
+                        if (c>0) {
+                            ((ImageView) findViewById(R.id.bnRateUp)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_up_on));
+                            ((ImageView) findViewById(R.id.bnRateDown)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_down_off));
+                        } else {
+                            ((ImageView) findViewById(R.id.bnRateUp)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_up_off));
+                            ((ImageView) findViewById(R.id.bnRateDown)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_down_off));
+                        }
                     }
                 }.on(baseURL);
                 break;
             case (R.id.bnRateDown):
-                new ActionRequest(this, lm.getLogin(), ActionRequest.POST_VOTE_UP, Integer.valueOf(data.getFirstChildText("id"))) {
-                    @Override public void onSuccess() {
-                        ((ImageView) findViewById(R.id.bnRateDown)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_down_on));
-                        ((ImageView) findViewById(R.id.bnRateUp)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_up_off));
+                postData = new HashMap<String, String>();
+                postData.put("id", data.getFirstChildText("id"));
+                postData.put("score", "-1");
+                new ActionRequest(this, lm.getLogin(), ActionRequest.POST_VOTE_DOWN, postData) {
+                    @Override public void onSuccess(XMLNode result) {
+                        Integer c;
+                        try { c = Integer.parseInt(result.getFirstChildText("change")); }
+                        catch (Exception e) { c = 0; }
+                        if (c<0) {
+                            ((ImageView) findViewById(R.id.bnRateDown)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_down_on));
+                            ((ImageView) findViewById(R.id.bnRateUp)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_up_off));
+                        } else {
+                            ((ImageView) findViewById(R.id.bnRateUp)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_up_off));
+                            ((ImageView) findViewById(R.id.bnRateDown)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_down_off));
+                        }
                     }
                 }.on(baseURL);
                 break;
@@ -499,12 +526,13 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
-    private abstract class VideoCacher extends AsyncTask<Void, Void, File> {
-        String vid, url, userAgent;
+    private class PostDownloader extends AsyncTask<Void, Void, File> {
+        String url, userAgent;
+        File target;
         Context context;
-        public VideoCacher(String vid, String url) {
+        public PostDownloader(File target, String url) {
             this.url = url;
-            this.vid = vid;
+            this.target = target;
             userAgent = (context = PostShowActivity.this.getApplicationContext()).getResources().getString(R.string.requestUserAgent);
         }
         @Override protected File doInBackground(Void... voids) {
@@ -513,17 +541,15 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 urlc.setRequestMethod("GET");
                 urlc.addRequestProperty("User-Agent", userAgent);
                 BufferedInputStream bis = new BufferedInputStream(urlc.getInputStream());
+                Logger.getLogger("a621").info("Connected with response code " + urlc.getResponseCode() + ": " + urlc.getResponseMessage());
 
                 int count;
-                OutputStream output = null;
-                //int lenghtOfFile = urlc.getContentLength();
+                BufferedOutputStream output = null;
                 boolean success=false;
-                File cache = new File (context.getCacheDir(), vid+".webm");
-                if (cache.exists()) cache.delete(); // re downloading it...
+                if (target.exists()) target.delete(); // re downloading it...
                 try {
-                    Logger.getLogger("a621").info("Chaching video to " + cache.getAbsolutePath());
-                    //output = new FileOutputStream(cache.getAbsolutePath());
-                    output = new FileOutputStream(cache);
+                    Logger.getLogger("a621").info("Downloading post " + url + " to " + target.getAbsolutePath());
+                    output = new BufferedOutputStream(new FileOutputStream(target));
 
                     byte data[] = new byte[1024];
 
@@ -533,20 +559,23 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                     output.flush();
                     success=true;
                 } catch (Exception e) {
+                    Logger.getLogger("a621").log(Level.INFO, "ERROR ", e);
                     e.printStackTrace();
-                } finally {
-                    try { output.close(); } catch (Exception e) {}
-                    try { bis.close(); } catch (Exception e) {}
                 }
+                try { output.close(); } catch (Exception e) { e.printStackTrace(); }
+                try { bis.close(); } catch (Exception e) { e.printStackTrace(); }
                 if (!success) return null;
-                return cache;
+                return target;
             } catch (Exception exc) {
+                Logger.getLogger("a621").log(Level.INFO, "ERROR ", exc);
                 exc.printStackTrace();
                 return null;
             }
         }
 
-        @Override protected abstract void onPostExecute(File file);
+        @Override protected void onPostExecute(File file) {
+            Toast.makeText(context, (file == null || !file.exists() || !file.isFile() ? "Download failed!" : "Post downloaded"), Toast.LENGTH_LONG).show();
+        };
     }
 
     @Override
@@ -557,28 +586,15 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 if (saveLoc == null) {
                     quickToast("Invalid Directory!");
                 }
-                String imgPath = imgImage.getCachedPath();
+                String imgPath = PostShowActivity.this.data.getFirstChildText("file_url");
                 try {
-                    InputStream in = new FileInputStream(new File(imgPath));
-                    File saveFile = new File(saveLoc, imgPath.substring(imgPath.lastIndexOf('/')));
-                    Logger.getLogger("a621").info(saveFile.getAbsolutePath());
-                    OutputStream out = new FileOutputStream(saveFile);
-
-                    // Transfer bytes from in to out
-                    byte[] buf = new byte[1024];
-                    int len;
-                    while ((len = in.read(buf)) > 0) {
-                        out.write(buf, 0, len);
-                    }
-                    in.close();
-                    out.flush();
-                    out.close();
+                    new PostDownloader(new File(saveLoc, imgPath.substring(imgPath.lastIndexOf('/'))), imgPath).execute();
                 } catch (Exception e) {
                     quickToast("Can't save file:\n"+e.getMessage());
                     e.printStackTrace();
                     return;
                 }
-                quickToast("File saved!");
+                Toast.makeText(this, "Downloading...", Toast.LENGTH_SHORT).show();
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 //nothing changes
             }

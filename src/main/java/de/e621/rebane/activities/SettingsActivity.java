@@ -1,20 +1,24 @@
 package de.e621.rebane.activities;
 
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Switch;
 
 import java.io.File;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Logger;
 
 import de.e621.rebane.FilterManager;
 import de.e621.rebane.a621.R;
@@ -32,12 +36,17 @@ public class SettingsActivity extends DrawerWrapper
     public final static String SETTINGDMAILSERVICE = "BackgroundDMailService";
     public final static String SETTINGDEFAULTSAVE = "AddDefauleSaveLocation";
     public final static String SETTINGFANCYCOMMENTS = "AppLoadUserdataOnComments";
+    public final static String SETTINGLAUNCHACTIVITY = "AppDefaultLaunchActivity";
 
     EditText txtDefaultSearch, txtBlacklist, txtBaseURL, txtPostPage, txtDefaultSave;
     Switch chkQuality, chkDMail, chkFancyComments;
+    Spinner spnLaunchActivity;
+    List<String> activitylist = new LinkedList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        activitylist.add("Posts"); activitylist.add("Forums");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -51,9 +60,13 @@ public class SettingsActivity extends DrawerWrapper
         chkQuality =        (Switch)    findViewById(R.id.chkQuality);
         chkDMail =          (Switch)    findViewById(R.id.chkDMail);
         chkFancyComments =  (Switch)    findViewById(R.id.chkFancyComments);
+        spnLaunchActivity = (Spinner)   findViewById(R.id.spnLaunchActivity);
         ((Button)findViewById(R.id.bnApply)).setOnClickListener(this);
 
-        String extra = database.getValue(SETTINGDEFAULTSEARCH);
+        spnLaunchActivity.setAdapter(new ArrayAdapter<String>(this, R.layout.singleline_listentry, activitylist));
+        String extra = database.getValue(SETTINGLAUNCHACTIVITY);
+        if (extra != null) spnLaunchActivity.setSelection(activitylist.contains(extra) ? activitylist.indexOf(extra) : 0);
+        extra = database.getValue(SETTINGDEFAULTSEARCH);
         if (extra != null) txtDefaultSearch.setText(URLDecoder.decode(extra));
         String[] tmp = database.getStringArray(SETTINGBLACKLIST);
         if (tmp != null && tmp.length > 0) {
@@ -113,6 +126,9 @@ public class SettingsActivity extends DrawerWrapper
             startActivityForResult(fchooser, 1);
         } else if (view.getId() == R.id.bnApply) {
             openDB();
+            Object val = spnLaunchActivity.getSelectedItem();
+            Logger.getLogger("a621").info(val != null ? (String)val : "NUL");
+            database.setValue(SETTINGLAUNCHACTIVITY, (val != null ? (String)val : "Posts"));
             database.setValue(SETTINGDEFAULTSEARCH, URLEncoder.encode(txtDefaultSearch.getText().toString()));
             String[] tmp = txtBlacklist.getText().toString().split("\n");
             if (tmp != null && tmp.length > 0) {

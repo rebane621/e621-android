@@ -30,7 +30,7 @@ tools:openDrawer="start">
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_forums"/>
+    <include layout="@layout/content_paginated_list"/>
 
 </android.support.design.widget.CoordinatorLayout>
 

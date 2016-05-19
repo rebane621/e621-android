@@ -25,6 +25,23 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="@string/settings_launchactivity"
+                android:id="@+id/textView16"
+                android:textColor="@color/text_neutral"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"/>
+
+            <Spinner
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/spnLaunchActivity"
+                android:entries="@array/settings_launchactivityvals"
+                android:spinnerMode="dropdown"
+                android:background="@color/colorPrimary"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/settings_defaultsearch"
                 android:id="@+id/textView2"
                 android:textColor="@color/text_neutral"
