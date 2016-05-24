@@ -8,7 +8,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -21,6 +23,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutCompat;
 import android.text.Html;
+import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,9 +31,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.webkit.MimeTypeMap;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AbsoluteLayout;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -39,6 +44,8 @@ import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
+
+import org.w3c.dom.Text;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -50,6 +57,11 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,6 +76,7 @@ import de.e621.rebane.LoginManager;
 import de.e621.rebane.MiscStatics;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
+import de.e621.rebane.components.ColoredListAdapter;
 import de.e621.rebane.components.CommentListAdapter;
 import de.e621.rebane.components.DTextView;
 import de.e621.rebane.components.TouchImageView;
@@ -77,6 +90,8 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
     ImageView bnMore, bnComments;
     View postInfo, postComments, layMore;
+
+    List<TextView> notes = null;
 
     TouchImageView imgImage;
     WebView swfImage;
@@ -104,6 +119,12 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
             "<embed src=\"@@@URL@@@\" quality=\"high\" bgcolor=\"#152f56\" width=\"600\" height=\"450\" name=\"flashcontainer\" align=\"middle\" allowscriptaccess=\"sameDomain\" type=\"application/x-shockwave-flash\" pluginspage=\"http://www.macromedia.com/go/getflashplayer\">\n" +
             "</object></body></html>";
 
+    public View.OnClickListener NoteClickListener = new View.OnClickListener() {
+        @Override public void onClick(View view) {
+            Toast.makeText(PostShowActivity.this, ((TextView)view).getText().toString(), Toast.LENGTH_LONG).show();
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,17 +136,87 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         postInfo =                      findViewById(R.id.viewPostInfo);
         postComments =                  findViewById(R.id.viewPostComments);
         imgImage =  (TouchImageView)    findViewById(R.id.imageView);
-        swfImage =  (WebView)   findViewById(R.id.swfView);
+        swfImage =  (WebView)           findViewById(R.id.swfView);
 //        gifImage =  (WebImageView)      findViewById(R.id.gifView);
         webmImage = (VideoView)         findViewById(R.id.videoView);
         lstTags =   (ListView)          findViewById(R.id.lstTags);
         lstComments = (ListView)        findViewById(R.id.lstComments);
         bnMore.setOnClickListener(this);
         bnComments.setOnClickListener(this);
-        ((ImageView) findViewById(R.id.bnRateUp)).setOnClickListener(this);
-        ((ImageView) findViewById(R.id.bnRateDown)).setOnClickListener(this);
-        ((ImageView) findViewById(R.id.bnFav)).setOnClickListener(this);
+        (findViewById(R.id.bnRateUp)).setOnClickListener(this);
+        (findViewById(R.id.bnRateDown)).setOnClickListener(this);
+        (findViewById(R.id.bnFav)).setOnClickListener(this);
 
+        imgImage.setOnTouchImageViewListener(new TouchImageView.OnTouchImageViewListener() {
+            @Override public void onMove() {
+                Logger.getLogger("a621").info("Current scale: " + imgImage.getCurrentZoom() + " " + (imgImage.getCurrentZoom() == imgImage.getMinZoom()) + " " + (imgImage.getCurrentZoom() == imgImage.getMaxZoom()));
+                if (notes != null && !notes.isEmpty()) {
+                    if (imgImage.getCurrentZoom() == 1.0)
+                        for (TextView tv : notes)
+                            tv.setVisibility(View.VISIBLE);
+                    else
+                        for (TextView tv : notes)
+                            tv.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        //load notes
+        imgImage.setWebImageLoadedListener(new WebImageView.WebImageLoadedListener() {
+            @Override public void onImageLoaded() {
+                if (notes == null && imgImage.getVisibility()==View.VISIBLE) {
+                    (new XMLTask(PostShowActivity.this) {
+                        @Override
+                        protected void onPostExecute(XMLNode result) {
+
+                            if (result == null) {
+                                quickToast("Could not get Notes");
+                                return;
+                            }
+                            if (result.getChildCount() <= 0) { return; } // no notes found
+
+                            notes = new LinkedList<TextView>();
+                            TextView newnote; AbsoluteLayout.LayoutParams lapa;
+
+                            AbsoluteLayout lay = (AbsoluteLayout) findViewById(R.id.layNotesOverlay);
+                            Drawable b = imgImage.getDrawable();
+                            int imgW = Integer.parseInt(data.getFirstChildText("width"));   //image size
+                            int imgH = Integer.parseInt(data.getFirstChildText("height"));  //image size
+                            //use centered values and calculations since the elements is centered
+                            float cX = lay.getWidth()/2;  //screen middle
+                            float cY = lay.getHeight()/2; //screen middle
+                            double scale = (imgH/imgW > lay.getHeight()/lay.getWidth() ? lay.getHeight()/imgH : lay.getWidth()/imgW);
+                            //scale *= 1.15;   //fix offset?
+                            //image middle
+                            float ciX = (imgW/2);
+                            //image middle
+                            float ciY = (imgH/2);
+
+                            for (XMLNode note : result.getChildren()) {
+                                if (!Boolean.parseBoolean(note.getFirstChildText("is_active"))) continue;
+
+                                newnote = new TextView(PostShowActivity.this);
+
+                                int left = (int)(cX + ( Integer.parseInt(note.getFirstChildText("x")) - ciX ) * scale);
+                                int top = (int)(cY + ( Integer.parseInt(note.getFirstChildText("y")) - ciY ) * scale);
+                                int width = (int)(Integer.parseInt(note.getFirstChildText("width")) * scale);
+                                int height = (int)(Integer.parseInt(note.getFirstChildText("height")) * scale);
+
+                                lapa = new AbsoluteLayout.LayoutParams(width, height, left, top);
+                                newnote.setLayoutParams(lapa);
+                                newnote.setBackgroundColor(getResources().getColor(R.color.noteBackground));
+                                newnote.setText(note.getFirstChildText("body"));
+
+                                newnote.setOnClickListener(PostShowActivity.this.NoteClickListener);
+
+                                lay.addView(newnote);
+                                notes.add(newnote);
+                            }
+                        }
+                    }).execute( baseURL +"note/index.xml?post_id=" + data.getFirstChildText("id") );
+                }
+            }
+        });
 
         //swfImage.setDrawingCacheBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
         swfImage.setLayerType(View.LAYER_TYPE_HARDWARE, null);  //for flash
@@ -176,6 +267,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
        // webmImage.setDrawingCacheBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
 
+        //intent post data loader
         if (baseURL == null) baseURL = DrawerWrapper.baseURL;
         data = (XMLNode)getIntent().getSerializableExtra(EXTRAPOSTDATA);
         if (data == null) {
@@ -333,6 +425,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         ab.setTitle("Post #" + data.getFirstChildText("id"));
         ab.setSubtitle("▲ " + data.getFirstChildText("score") + " ♥ " + data.getFirstChildText("fav_count") + " " + data.getFirstChildText("rating").toUpperCase());
 
+        //comment post loader
         (new XMLTask(this) {
             @Override
             protected void onPostExecute(XMLNode result) {
@@ -361,6 +454,62 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 }
             }
         }).execute( baseURL +"comment/index.xml?post_id=" + data.getFirstChildText("id") );
+
+        //tag type loader
+        (new XMLTask(this) {
+            @Override
+            protected void onPostExecute(XMLNode result) {
+
+                if (result == null) {
+                    quickToast("Could not get tag types");
+                    return;
+                }
+                //if (result.getChildCount() <= 0) { quickToast("No results found..."); return; }
+
+                List<XMLNode> sorted = new LinkedList<XMLNode>();
+                sorted.addAll(result.children());
+                Collections.sort(sorted, new Comparator<XMLNode>() {
+                    @Override public int compare(XMLNode t0, XMLNode t1) {
+                        int comp0 = t0.getFirstChildText("type").compareTo(t1.getFirstChildText("type")) * -1; //reverse sort those to get general tags to the bottom
+                        return ( comp0 != 0 ? comp0 : t0.getFirstChildText("name").compareTo(t1.getFirstChildText("name")) );
+                    }
+                });
+
+                int[] colors = new int[] {
+                    getResources().getColor(R.color.tagGe),
+                    getResources().getColor(R.color.tagAr),
+                        0,          //unused value
+                    getResources().getColor(R.color.tagCo),
+                    getResources().getColor(R.color.tagCh),
+                    getResources().getColor(R.color.tagSp)
+                };
+
+                ColoredListAdapter cla = new ColoredListAdapter(PostShowActivity.this, R.id.singleline_listentry);
+                for (XMLNode n : sorted) {
+                    cla.add(n.getFirstChildText("name"), colors[Integer.parseInt(n.getFirstChildText("type"))]);
+                }
+
+                lstTags.setAdapter(cla);
+            }
+        }).execute( baseURL +"tag/index.xml?post_id=" + data.getFirstChildText("id") );
+
+        //favorite check postload
+        if (lm.isLoggedIn()) {
+            (new XMLTask(this) {
+                @Override protected void onPostExecute(XMLNode result) {
+                    if (result != null && result.getType().equals("posts")) {
+                        int faved = result.getChildCount();
+                        data.setAttribute("faved", String.valueOf(faved)); //getChildCount is more reliable than posts>count
+                        if (faved>0)
+                            ((ImageView) findViewById(R.id.bnFav)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_fav_on));
+                    }
+                }
+            }).execute(baseURL + "post/index.xml?tags=" + URLEncoder.encode("id:" + data.getFirstChildText("id") + " fav:" + lm.getUsername()) );
+        } else {
+            //Logger.getLogger("a621").info("Not logged in");
+        }
+
+        //TODO get rid of the fav check and a score up/down and hope it'll appear in the /post/show
     }
 
     @Override
@@ -393,6 +542,24 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                     ab.setSubtitle("Loading Comments...");
                 else
                     ab.setSubtitle(results.getResultCount() + " Comments");
+                break;
+            case (R.id.bnFav):
+                postData = new HashMap<String, String>();
+                postData.put("id", data.getFirstChildText("id"));
+                final int action = ((data.attributes().contains("faved") && !data.getAttribute("faved").equals("0")) ? ActionRequest.POST_UNFAVOURITE : ActionRequest.POST_FAVOURITE);
+                Logger.getLogger("a621").info(action == ActionRequest.POST_FAVOURITE ? "Adding post to favorites" : "Removing psot from favorites");
+                new ActionRequest(this, lm.getLogin(), action, postData) {
+                    @Override public void onSuccess(XMLNode result) {
+                        Logger.getLogger("a621").info(result.toString());
+                        if (action == ActionRequest.POST_FAVOURITE) {
+                            ((ImageView) findViewById(R.id.bnFav)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_fav_on));
+                            PostShowActivity.this.data.setAttribute("faved", "1");
+                        } else {
+                            ((ImageView) findViewById(R.id.bnFav)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_fav_off));
+                            PostShowActivity.this.data.setAttribute("faved", "0");
+                        }
+                    }
+                }.on(baseURL);
                 break;
             case (R.id.bnRateUp):
                 postData = new HashMap<String, String>();
@@ -547,6 +714,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 BufferedOutputStream output = null;
                 boolean success=false;
                 if (target.exists()) target.delete(); // re downloading it...
+                while (target.exists());    //wait for file to be deleted?
                 try {
                     Logger.getLogger("a621").info("Downloading post " + url + " to " + target.getAbsolutePath());
                     output = new BufferedOutputStream(new FileOutputStream(target));
@@ -556,14 +724,16 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                     while ((count = bis.read(data)) != -1) {
                         output.write(data, 0, count);
                     }
-                    output.flush();
+
                     success=true;
                 } catch (Exception e) {
                     Logger.getLogger("a621").log(Level.INFO, "ERROR ", e);
                     e.printStackTrace();
                 }
+                try { output.flush(); } catch (Exception e) { e.printStackTrace(); }
                 try { output.close(); } catch (Exception e) { e.printStackTrace(); }
                 try { bis.close(); } catch (Exception e) { e.printStackTrace(); }
+
                 if (!success) return null;
                 return target;
             } catch (Exception exc) {

@@ -6,7 +6,7 @@
 
     <string name="action_settings">Settings</string>
 
-    <string name="requestUserAgent">Dalvik Android/XML/a621 0.3 (reBane)</string>
+    <string name="requestUserAgent">Dalvik Android/XML/a621 0.4b (reBane)</string>
 
     <string name="post_search_hint">Enter up to 6 Tags</string>
 

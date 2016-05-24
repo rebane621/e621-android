@@ -76,6 +76,12 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
         }
     }
 
+    public interface WebImageLoadedListener {
+        void onImageLoaded();
+    }
+    WebImageLoadedListener wil = null;
+    public void setWebImageLoadedListener(WebImageLoadedListener listener) { wil = listener; }
+
     public void setAdapter(ArrayAdapter<?> ad) {
         adapter=ad;
     }
@@ -239,6 +245,8 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
                 updateDisplay();
 
                 if (reqIids.contains(iid)) reqIids.remove(iid);
+
+                if (wil != null) wil.onImageLoaded();
             } else {
                 Logger.getLogger("a621").info("Could not download " + iid);
             }

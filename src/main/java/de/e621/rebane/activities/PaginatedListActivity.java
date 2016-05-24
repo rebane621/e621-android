@@ -16,6 +16,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import java.net.URLEncoder;
 import java.util.logging.Logger;
 
 import de.e621.rebane.MiscStatics;
@@ -146,9 +147,11 @@ public abstract class PaginatedListActivity extends DrawerWrapper
     void handleIntent(Intent intent) {
         super.handleIntent(intent);
         page = intent.getIntExtra(SEARCHQUERYPAGE,1);
-        String tmp = intent.getStringExtra(SearchManager.QUERY);
-        if (tmp != null) query = tmp;
-        if (results==null) searchPosts(query, page);
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String tmp = intent.getStringExtra(SearchManager.QUERY);
+            if (tmp != null) query = URLEncoder.encode(tmp);
+        }
+        //if (results==null) searchPosts(query, page);  //subclass should call
     }
 
     void searchPosts(String escapedQuery, int page) {

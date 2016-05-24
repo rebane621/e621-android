@@ -66,11 +66,8 @@ public class PostsActivity extends PaginatedListActivity
     @Override
     void handleIntent(Intent intent) {
         super.handleIntent(intent);
-        page = intent.getIntExtra(SEARCHQUERYPAGE,1);
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            query = intent.getStringExtra(SearchManager.QUERY);
-            query = (query==null?"":URLEncoder.encode(query));
-        } else {
+        //page = intent.getIntExtra(SEARCHQUERYPAGE,1); //done by super
+        if (!Intent.ACTION_SEARCH.equals(intent.getAction())) { //true case handled by super
             openDB();
             query = database.getValue(SettingsActivity.SETTINGDEFAULTSEARCH);
             if (query == null) query = "";

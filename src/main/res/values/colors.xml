@@ -8,4 +8,11 @@
     <color name="preview_red">#e45f5f</color>
     <color name="text_neutral">#b4c7d9</color>
     <color name="background_dim">#a0152f56</color>
+    <color name="noteBackground">#56ffff00</color>
+
+    <color name="tagGe">#ffffff</color><!-- General -->
+    <color name="tagAr">#f2ac08</color><!-- Artist -->
+    <color name="tagCo">#00aa00</color><!-- Copyright -->
+    <color name="tagCh">#dd00dd</color><!-- Character -->
+    <color name="tagSp">#ED5D1F</color><!-- Species -->
 </resources>

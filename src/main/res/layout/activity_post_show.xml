@@ -9,17 +9,23 @@
     android:background="@color/colorPrimaryDark"
     android:padding="0dp">
 
-    <de.e621.rebane.components.TouchImageView
+    <AbsoluteLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/imageView"
-        app:useCache="false"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:adjustViewBounds="true"
-        android:padding="0dp"
-        android:visibility="gone"
-        />
+        android:id="@+id/layNotesOverlay">
+
+        <de.e621.rebane.components.TouchImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/imageView"
+            app:useCache="false"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:adjustViewBounds="true"
+            android:padding="0dp"
+            android:visibility="gone"
+            />
+    </AbsoluteLayout>
 
     <WebView
         android:layout_width="match_parent"
