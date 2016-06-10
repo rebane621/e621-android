@@ -251,7 +251,7 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
                 Logger.getLogger("a621").info("Could not download " + iid);
             }
         }
-    };
+    }
 
     void updateDisplay() {
         View view = WebImageView.this;

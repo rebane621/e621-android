@@ -7,6 +7,7 @@
     <color name="preview_yellow">#e4e150</color>
     <color name="preview_red">#e45f5f</color>
     <color name="text_neutral">#b4c7d9</color>
+    <color name="hint_foreground_dark">#ffffff</color>
     <color name="background_dim">#a0152f56</color>
     <color name="noteBackground">#56ffff00</color>
 

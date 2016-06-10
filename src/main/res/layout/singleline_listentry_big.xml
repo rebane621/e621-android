@@ -3,5 +3,8 @@
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
           android:text="New Text"
+          android:padding="3dp"
+          android:textAppearance="?android:attr/textAppearanceLarge"
           android:id="@+id/singleline_listentry"
-          android:textColor="@color/text_neutral"/>
+          android:textColor="@color/text_neutral"
+          android:background="@color/colorPrimary"/>

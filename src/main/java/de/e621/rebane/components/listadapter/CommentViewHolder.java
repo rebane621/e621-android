@@ -1,4 +1,4 @@
-package de.e621.rebane.components;
+package de.e621.rebane.components.listadapter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -19,6 +19,8 @@ import de.e621.rebane.FilterManager;
 import de.e621.rebane.MiscStatics;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.PostShowActivity;
+import de.e621.rebane.components.DTextView;
+import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLTask;
 
@@ -82,6 +84,7 @@ public class CommentViewHolder {
             author = new AuthorData(data.getFirstChildText("creator"), Integer.valueOf(UserID), 0, -100);
             authorData.put(UserID, author);
             if (fancyComments) {
+                if (!MiscStatics.canRequest(context)) return;
                 requestRunningFor.add(UserID);
                 (new XMLTask(context) {
                     @Override protected void onPostExecute(XMLNode result) {
@@ -153,25 +156,27 @@ public class CommentViewHolder {
             final String aid = String.valueOf(author.getUid());
             if (author.getIid() > 0) {
                 if (url == null) {
-                    avatar.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_loading));
-                    author.setImageURL("");//only load once
-                    new XMLTask(context) {
-                        @Override protected void onPostExecute(XMLNode result) {
-                            AuthorData putto = authorData.get(aid);
-                            if (result == null) {
-                                putto.setImageURL(null);    // ready for retry
-                            } else if (fm.isBlacklisted(result)) {
-                                putto.setImageURL("blacklisted");
-                                avatar.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_blocked));
-                                avatar.postInvalidate();
-                            } else {
-                                putto.setImageURL(result.getFirstChildText("preview_url"));
-                                avatar.setImageUrl("avatar" + aid, putto.getImageURL(), false);
-                                avatar.postInvalidate();
+                    if (MiscStatics.canRequest(context)) {
+                        avatar.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_loading));
+                        author.setImageURL("");//only load once
+                        new XMLTask(context) {
+                            @Override protected void onPostExecute(XMLNode result) {
+                                AuthorData putto = authorData.get(aid);
+                                if (result == null) {
+                                    putto.setImageURL(null);    // ready for retry
+                                } else if (fm.isBlacklisted(result)) {
+                                    putto.setImageURL("blacklisted");
+                                    avatar.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_blocked));
+                                    avatar.postInvalidate();
+                                } else {
+                                    putto.setImageURL(result.getFirstChildText("preview_url"));
+                                    avatar.setImageUrl("avatar" + aid, putto.getImageURL(), false);
+                                    avatar.postInvalidate();
+                                }
+                                authorData.put(aid, putto);
                             }
-                            authorData.put(aid, putto);
-                        }
-                    }.execute(baseURL + "post/show.xml?id=" + author.getIid());
+                        }.execute(baseURL + "post/show.xml?id=" + author.getIid());
+                    }
                 } else {
                     if (url == "blacklisted") {
                         avatar.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_blocked));

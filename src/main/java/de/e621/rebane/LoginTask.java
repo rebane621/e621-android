@@ -45,7 +45,7 @@ public abstract class LoginTask extends AsyncTask<String, Void, Boolean> {
             InputStream bis = urlc.getInputStream();
             Logger.getLogger("a621").info("Connected with response code " + urlc.getResponseCode() + ": " + urlc.getResponseMessage());
 
-            XMLNode result = reader.parse(bis);
+            XMLNode result = XMLReader.parse(bis);
 
             if (result.getType().equals("error")) {
                 db.setValue("password", "");

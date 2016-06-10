@@ -18,9 +18,11 @@ public abstract class ActionRequest extends XMLTask {
             "post/vote.xml?",
             "post/vote.xml?",
             "favorite/create.xml?",
-            "favorite/destroy.xml?"
+            "favorite/destroy.xml?",
+            "dmail/create.xml?"
     };
     private static final boolean[] APIb = {  //this array flags requests as broken
+            false,
             false,
             false,
             false,
@@ -30,12 +32,14 @@ public abstract class ActionRequest extends XMLTask {
             true,
             true,
             true,
+            true,
             true
     };
     public static final int POST_VOTE_UP = 0;
     public static final int POST_VOTE_DOWN = 1;
     public static final int POST_FAVOURITE = 2;
     public static final int POST_UNFAVOURITE = 3;
+    public static final int DMAIL_CREATE = 4;
 
     private static String login;
     private int requestID;

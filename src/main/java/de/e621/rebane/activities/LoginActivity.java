@@ -1,5 +1,6 @@
 package de.e621.rebane.activities;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.method.PasswordTransformationMethod;
 import android.view.View;
@@ -15,18 +16,18 @@ public class LoginActivity extends DrawerWrapper implements View.OnClickListener
     EditText username, password;
 
     @Override
+    @SuppressLint("MissingSuperCall")
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
-        onCreateDrawer();   //DrawerWrapper function that requires the layout to be set to prepare the drawer
-        DrawerWrapper.openActivity = this.getClass();   //block the drawer from reopening this activity while opened
+        super.onCreate(R.layout.content_login, savedInstanceState);
+        //setContentView(R.layout.activity_login);
+        onCreateDrawer(this.getClass());   //DrawerWrapper function that requires the layout to be set to prepare the drawer
 
         username = (EditText) findViewById(R.id.txtUsername);
         password = (EditText) findViewById(R.id.txtPassword);
 
         password.setTransformationMethod(new FancyPasswordInput());
 
-        ((Button)findViewById(R.id.bnLogin)).setOnClickListener(this);
+        findViewById(R.id.bnLogin).setOnClickListener(this);
     }
 
     @Override public void onClick(View view) {
@@ -57,6 +58,6 @@ public class LoginActivity extends DrawerWrapper implements View.OnClickListener
                 return mSource.subSequence(start, end); // Return default
             }
         }
-    };
+    }
 }
 

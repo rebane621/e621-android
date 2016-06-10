@@ -21,8 +21,7 @@
             android:name="de.e621.rebane.activities.PostsActivity"
             android:label="@string/title_posts"
             android:launchMode="singleTop"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH"/>
             </intent-filter>
@@ -37,8 +36,7 @@
             android:label="@string/title_settings"
             android:launchMode="singleTop"
             android:parentActivityName="de.e621.rebane.activities.PostsActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name="de.e621.rebane.activities.PostShowActivity"
@@ -48,8 +46,7 @@
         <activity
             android:name="de.e621.rebane.activities.LoginActivity"
             android:label="@string/title_activity_login"
-            android:launchMode="singleTop"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:launchMode="singleTop">
         </activity>
         <activity
             android:name="de.e621.rebane.activities.FolderChooser"
@@ -59,10 +56,21 @@
         <activity
             android:name="de.e621.rebane.activities.ForumsActivity"
             android:label="@string/title_forums"
-            android:launchMode="singleTop"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:launchMode="singleTop">
         </activity>
-        <activity android:name="de.e621.rebane.activities.BlipActivity">
+        <activity
+            android:name="de.e621.rebane.activities.BlipActivity"
+            android:label="@string/title_blips"
+            android:launchMode="singleTop">
+        </activity>
+        <activity
+            android:name="de.e621.rebane.activities.DMailsActivity"
+            android:label="@string/title_dmail"
+            android:launchMode="singleTop">
+        </activity>
+        <activity
+            android:name="de.e621.rebane.activities.DMailShowActivity"
+            android:label="@string/title_dmail">
         </activity>
         <activity
             android:name="de.e621.rebane.activities.LauncherActivity"

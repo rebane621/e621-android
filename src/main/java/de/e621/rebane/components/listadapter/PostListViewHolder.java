@@ -1,4 +1,4 @@
-package de.e621.rebane.components;
+package de.e621.rebane.components.listadapter;
 
 import android.Manifest;
 import android.app.Activity;
@@ -19,6 +19,7 @@ import java.lang.reflect.Array;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.FolderChooser;
 import de.e621.rebane.activities.PostShowActivity;
+import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.xmlreader.XMLNode;
 
 public class PostListViewHolder {
@@ -47,7 +48,7 @@ public class PostListViewHolder {
         });
         previewImage.setOnLongClickListener(new View.OnLongClickListener() {
             @Override public boolean onLongClick(View view) {
-                Toast.makeText(view.getContext(), "TODO: Open popup and ask the user for action", Toast.LENGTH_LONG).show();
+                Toast.makeText(view.getContext().getApplicationContext(), "TODO: Open popup and ask the user for action", Toast.LENGTH_LONG).show();
                 return false;
             }
         });

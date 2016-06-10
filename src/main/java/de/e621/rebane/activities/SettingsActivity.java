@@ -1,5 +1,6 @@
 package de.e621.rebane.activities;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -44,13 +45,12 @@ public class SettingsActivity extends DrawerWrapper
     List<String> activitylist = new LinkedList<String>();
 
     @Override
+    @SuppressLint("MissingSuperCall")
     protected void onCreate(Bundle savedInstanceState) {
-        activitylist.add("Posts"); activitylist.add("Forums");
+        activitylist.add("Posts"); activitylist.add("Forums"); activitylist.add("DMails");
 
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        super.onCreate(R.layout.content_settings, savedInstanceState);
+        //setContentView(R.layout.activity_settings);
 
         txtDefaultSearch =  (EditText)  findViewById(R.id.txtDSearch);
         txtBlacklist =      (EditText)  findViewById(R.id.txtBlacklist);
@@ -61,9 +61,9 @@ public class SettingsActivity extends DrawerWrapper
         chkDMail =          (Switch)    findViewById(R.id.chkDMail);
         chkFancyComments =  (Switch)    findViewById(R.id.chkFancyComments);
         spnLaunchActivity = (Spinner)   findViewById(R.id.spnLaunchActivity);
-        ((Button)findViewById(R.id.bnApply)).setOnClickListener(this);
+        findViewById(R.id.bnApply).setOnClickListener(this);
 
-        spnLaunchActivity.setAdapter(new ArrayAdapter<String>(this, R.layout.singleline_listentry, activitylist));
+        spnLaunchActivity.setAdapter(new ArrayAdapter<String>(this, R.layout.singleline_listentry_big, activitylist));
         String extra = database.getValue(SETTINGLAUNCHACTIVITY);
         if (extra != null) spnLaunchActivity.setSelection(activitylist.contains(extra) ? activitylist.indexOf(extra) : 0);
         extra = database.getValue(SETTINGDEFAULTSEARCH);

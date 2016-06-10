@@ -74,10 +74,15 @@ public abstract class XMLTask extends AsyncTask<String, Void, XMLNode> {
             Logger.getLogger("a621").warning("Unable to connect!");
             Logger.getLogger("a621").warning(exc.getMessage());
             exc.printStackTrace();
+            onExecutionFailed(exc);
             return null;
         }
     }
 
     abstract protected void onPostExecute(XMLNode result);
+
+    public void onExecutionFailed(Exception exc) {
+
+    }
 
 }

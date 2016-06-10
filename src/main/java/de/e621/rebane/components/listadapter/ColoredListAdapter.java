@@ -1,4 +1,4 @@
-package de.e621.rebane.components;
+package de.e621.rebane.components.listadapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;

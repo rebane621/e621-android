@@ -8,25 +8,18 @@ import android.support.v7.app.ActionBar;
 import android.view.View;
 
 import de.e621.rebane.a621.R;
-import de.e621.rebane.components.listadapter.ForumListAdapter;
+import de.e621.rebane.components.listadapter.DMailListAdapter;
 import de.e621.rebane.xmlreader.XMLNode;
 
-public class ForumsActivity extends PaginatedListActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
+public class DMailsActivity extends PaginatedListActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
 
-    final static String FORUMQUERYPAGE = "a621 SearchManager Forum Page";
-
-    /*@Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_paginated_list);
-        postLayoutInflated(this.getClass());
-    }*/
+    final static String FORUMQUERYPAGE = "a621 SearchManager DMail Page";
 
     @Override
     @SuppressLint("MissingSuperCall")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(R.layout.content_paginated_list, savedInstanceState);
-        //setContentView(R.layout.activity_posts);
+        //setContentView(R.layout.activity_paginated_list);
         postLayoutInflated(this.getClass());
     }
 
@@ -49,19 +42,19 @@ public class ForumsActivity extends PaginatedListActivity implements SwipeRefres
     }
 
     @Override void searchPosts(String escapedQuery, int page) {
-        API_URI = "forum/index.xml?page="+page;
-        API_LOGIN = false;
+        API_URI = "dmail/inbox.xml?page="+page;
+        API_LOGIN = true;
 
         super.searchPosts(escapedQuery, page);
     }
 
     @Override void onSearchResult(XMLNode result, String query, int page) {
-        results = new ForumListAdapter(getApplicationContext(), R.id.lblTitle, result.children());
+        results = new DMailListAdapter(getApplicationContext(), R.id.lblTitle, result.children());
         //results.svNumPosts = (result.attributes().contains("count") ? Integer.valueOf(result.getAttribute("count")) : 0); //this value is not provided
-        ForumsActivity.this.page = page;
+        DMailsActivity.this.page = page;
 
         ActionBar ab = getSupportActionBar();
-        ab.setTitle(getResources().getString(R.string.title_forums) + " | " + page);
+        ab.setTitle(getResources().getString(R.string.title_dmail) + " | " + page);
         //setTitle(getResources().getString(R.string.title_posts) + " " + _page + (_query.equals("")?" | *":" | "+XMLUtils.unescapeXML(_query)));
     }
 

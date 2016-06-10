@@ -1,4 +1,4 @@
-package de.e621.rebane.components;
+package de.e621.rebane.components.listadapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -7,12 +7,9 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import de.e621.rebane.FilterManager;
-import de.e621.rebane.MiscStatics;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.xmlreader.XMLNode;
 

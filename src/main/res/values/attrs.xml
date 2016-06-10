@@ -2,4 +2,8 @@
     <declare-styleable name="WebImageView">
         <attr name="useCache" format="boolean" />
     </declare-styleable>
+    <declare-styleable name="FixedAspectRatioFrameLayout">
+        <attr name="aspectRatioWidth" format="integer" />
+        <attr name="aspectRatioHeight" format="integer" />
+    </declare-styleable>
 </resources>

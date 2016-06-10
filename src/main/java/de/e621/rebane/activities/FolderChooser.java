@@ -35,7 +35,7 @@ public class FolderChooser extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.activity_folder_chooser);
 
         (lv = (ListView) findViewById(R.id.lstFolder)).setOnItemClickListener(this);
-        ((Button)findViewById(R.id.bnApply)).setOnClickListener(this);
+        findViewById(R.id.bnApply).setOnClickListener(this);
         //lv.setOnItemClickListener(this);
         path = (TextView) findViewById(R.id.txtPath);
 

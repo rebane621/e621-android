@@ -8,10 +8,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -21,17 +19,12 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutCompat;
 import android.text.Html;
-import android.util.AttributeSet;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.webkit.MimeTypeMap;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -45,21 +38,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-import org.w3c.dom.Text;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -76,11 +62,11 @@ import de.e621.rebane.LoginManager;
 import de.e621.rebane.MiscStatics;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.components.ColoredListAdapter;
-import de.e621.rebane.components.CommentListAdapter;
 import de.e621.rebane.components.DTextView;
 import de.e621.rebane.components.TouchImageView;
 import de.e621.rebane.components.WebImageView;
+import de.e621.rebane.components.listadapter.ColoredListAdapter;
+import de.e621.rebane.components.listadapter.CommentListAdapter;
 import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLTask;
 
@@ -161,9 +147,11 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
             }
         });
 
-        //load notes
+        //load notes (needs to be done after the image loaded
         imgImage.setWebImageLoadedListener(new WebImageView.WebImageLoadedListener() {
             @Override public void onImageLoaded() {
+                if (!Boolean.parseBoolean(data.getFirstChildText("has_notes"))) return;
+                if (!MiscStatics.canRequest(PostShowActivity.this)) return;
                 if (notes == null && imgImage.getVisibility()==View.VISIBLE) {
                     (new XMLTask(PostShowActivity.this) {
                         @Override
@@ -172,7 +160,8 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                             if (result == null) {
                                 quickToast("Could not get Notes");
                                 return;
-                            }
+                            } else
+                                Logger.getLogger("a621").info(result.toString());
                             if (result.getChildCount() <= 0) { return; } // no notes found
 
                             notes = new LinkedList<TextView>();
@@ -182,15 +171,22 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                             Drawable b = imgImage.getDrawable();
                             int imgW = Integer.parseInt(data.getFirstChildText("width"));   //image size
                             int imgH = Integer.parseInt(data.getFirstChildText("height"));  //image size
+
+                            double r1 = (double)imgH/(double)imgW, r2 = (double)lay.getHeight()/(double)lay.getWidth(), scale;
+                            Logger.getLogger("a621").info(imgH + "/" + imgW + "=" + r1 + " - " + lay.getHeight() + "/" + lay.getWidth() + "=" + r2);
+                            if (r1 > r2) {
+                                scale = (double)lay.getHeight() / (double)imgH;
+                            } else {
+                                scale = (double)lay.getWidth() / (double)imgW;
+                            }
+                            //scale = 1;//(cX/ciX);//1.15;   //fix offset?
+                            Logger.getLogger("a621").info("Note Scale: " + scale);
+
                             //use centered values and calculations since the elements is centered
                             float cX = lay.getWidth()/2;  //screen middle
                             float cY = lay.getHeight()/2; //screen middle
-                            double scale = (imgH/imgW > lay.getHeight()/lay.getWidth() ? lay.getHeight()/imgH : lay.getWidth()/imgW);
-                            //scale *= 1.15;   //fix offset?
-                            //image middle
-                            float ciX = (imgW/2);
-                            //image middle
-                            float ciY = (imgH/2);
+                            float ciX = (imgW/2);       //image middle
+                            float ciY = (imgH/2);       //image middle
 
                             for (XMLNode note : result.getChildren()) {
                                 if (!Boolean.parseBoolean(note.getFirstChildText("is_active"))) continue;
@@ -253,7 +249,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
             public void onPrepared(MediaPlayer mp) {
                 //VideoDuration = webmImage.getDuration();
                 webmImage.requestFocus();
-                webmImage.start();
+                //webmImage.start();
                 mp.setLooping(true);
             }
         });
@@ -276,6 +272,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 Toast.makeText(this, "The PostView did not receive any data", Toast.LENGTH_LONG).show();
                 finish();
             } else {
+                if (!MiscStatics.canRequest(PostShowActivity.this)) return;
                 new XMLTask(this) {
                     @Override protected void onPostExecute(XMLNode result) {
                         if (result == null || !result.getType().equals("post")) {
@@ -345,23 +342,10 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
             imgImage.setVisibility(View.VISIBLE);
             imgImage.setPlaceholderImage(getResources().getDrawable(R.mipmap.thumb_deleted));
         } else {
-            double frp = MiscStatics.freeRamPerc();
-            long frb = MiscStatics.freeRamB();
-            String quality = "file_url";
-            int fsz = Integer.valueOf(data.getFirstChildText("file_size"));
-            //if (frp < 50)
-            MiscStatics.clearMem(this, fsz / (1024 * 1024), 50.0);
-            //image requires more than 80% of the total available ram
-            if (frb * 0.8 < fsz) WebImageView.clear();   //purge everything, we need it
-            //image would require more than 90% of the total available ram
-            if (frb-(8*1024*1024)<fsz) {    //try to leave 8 MiB for the rest of the app
-                quality = "sample_url"; //reduce quality if low on ram
-                quickToast("Had to load lower res");
-            }
-
             type = data.getFirstChildText("file_ext");
             if (type.equalsIgnoreCase("swf")) {
                 swfImage.setVisibility(View.VISIBLE);
+                WebImageView.clear();
                 String innerHTML = swfhtml.replaceAll("@@@URL@@@", data.getFirstChildText("file_url"));
                 Logger.getLogger("a621").info("Inner HTML: " + innerHTML);
                 swfImage.loadData(innerHTML, "text/html", "utf-8");
@@ -375,6 +359,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                     //        webmImage.start();
                     //    }
                     //}.execute();
+                    WebImageView.clear();
                     webmImage.setVideoURI(Uri.parse(data.getFirstChildText("file_url")));
                     //webmImage.start();
                     MediaController mct = new MediaController(PostShowActivity.this);
@@ -383,6 +368,20 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                     Toast.makeText(this, "Could not load webm\n" + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             } else {
+                double frp = MiscStatics.freeRamPerc();
+                long frb = MiscStatics.freeRamB();
+                String quality = "file_url";
+                int fsz = Integer.valueOf(data.getFirstChildText("file_size"));
+                //if (frp < 50)
+                MiscStatics.clearMem(this, fsz / (1024 * 1024), 50.0);
+                //image requires more than 80% of the total available ram
+                if (frb * 0.66 < fsz) WebImageView.clear();   //purge everything, we need it
+                //image would require more than 90% of the total available ram
+                if (frb-(8*1024*1024)<fsz) {    //try to leave 8 MiB for the rest of the app
+                    quality = "sample_url"; //reduce quality if low on ram
+                    quickToast("Had to load lower res");
+                }
+
                 imgImage.setVisibility(View.VISIBLE);
                 imgImage.setPlaceholderImage(getResources().getDrawable(R.mipmap.thumb_loading));
                 imgImage.setImageUrl(data.getFirstChildText("md5"), data.getFirstChildText(quality), true);
@@ -426,85 +425,93 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         ab.setSubtitle("▲ " + data.getFirstChildText("score") + " ♥ " + data.getFirstChildText("fav_count") + " " + data.getFirstChildText("rating").toUpperCase());
 
         //comment post loader
-        (new XMLTask(this) {
-            @Override
-            protected void onPostExecute(XMLNode result) {
+        if (Boolean.parseBoolean(data.getFirstChildText("has_comments"))) {
+            if (MiscStatics.canRequest(PostShowActivity.this)) {
+                (new XMLTask(this) {
+                    @Override
+                    protected void onPostExecute(XMLNode result) {
 
-                if (result == null) {
-                    quickToast("Could not get Comments");
-                    return;
-                }
-                //if (result.getChildCount() <= 0) { quickToast("No results found..."); return; }
+                        if (result == null) {
+                            quickToast("Could not get Comments");
+                            return;
+                        }
+                        //if (result.getChildCount() <= 0) { quickToast("No results found..."); return; }
 
-                List<XMLNode> revers = new LinkedList<XMLNode>();
-                for (XMLNode n : result.children()) revers.add(0, n);
+                        List<XMLNode> revers = new LinkedList<XMLNode>();
+                        for (XMLNode n : result.children()) revers.add(0, n);
 
-                results = new CommentListAdapter(getApplicationContext(), R.id.txtComment, revers, baseURL, blacklist, postLoadUserdata);
-                results.svNumPosts = result.getChildCount();
+                        results = new CommentListAdapter(getApplicationContext(), R.id.txtComment, revers, baseURL, blacklist, postLoadUserdata);
+                        results.svNumPosts = result.getChildCount();
 
-                lstComments.setAdapter(results);
-                lstComments.refreshDrawableState();
+                        lstComments.setAdapter(results);
+                        lstComments.refreshDrawableState();
 
-                if (PostShowActivity.this.postComments.getVisibility() == View.VISIBLE) {
-                    ActionBar ab = PostShowActivity.this.getSupportActionBar();
-                    if (results == null)
-                        ab.setSubtitle("0 Comments");
-                    else
-                        ab.setSubtitle(results.getResultCount() + " Comments");
-                }
+                        if (PostShowActivity.this.postComments.getVisibility() == View.VISIBLE) {
+                            ActionBar ab = PostShowActivity.this.getSupportActionBar();
+                            if (results == null)
+                                ab.setSubtitle("0 Comments");
+                            else
+                                ab.setSubtitle(results.getResultCount() + " Comments");
+                        }
+                    }
+                }).execute(baseURL + "comment/index.xml?post_id=" + data.getFirstChildText("id"));
             }
-        }).execute( baseURL +"comment/index.xml?post_id=" + data.getFirstChildText("id") );
+        }
 
         //tag type loader
-        (new XMLTask(this) {
-            @Override
-            protected void onPostExecute(XMLNode result) {
+        if (MiscStatics.canRequest(PostShowActivity.this)) {
+            (new XMLTask(this) {
+                @Override
+                protected void onPostExecute(XMLNode result) {
 
-                if (result == null) {
-                    quickToast("Could not get tag types");
-                    return;
-                }
-                //if (result.getChildCount() <= 0) { quickToast("No results found..."); return; }
-
-                List<XMLNode> sorted = new LinkedList<XMLNode>();
-                sorted.addAll(result.children());
-                Collections.sort(sorted, new Comparator<XMLNode>() {
-                    @Override public int compare(XMLNode t0, XMLNode t1) {
-                        int comp0 = t0.getFirstChildText("type").compareTo(t1.getFirstChildText("type")) * -1; //reverse sort those to get general tags to the bottom
-                        return ( comp0 != 0 ? comp0 : t0.getFirstChildText("name").compareTo(t1.getFirstChildText("name")) );
+                    if (result == null) {
+                        quickToast("Could not get tag types");
+                        return;
                     }
-                });
+                    //if (result.getChildCount() <= 0) { quickToast("No results found..."); return; }
 
-                int[] colors = new int[] {
-                    getResources().getColor(R.color.tagGe),
-                    getResources().getColor(R.color.tagAr),
-                        0,          //unused value
-                    getResources().getColor(R.color.tagCo),
-                    getResources().getColor(R.color.tagCh),
-                    getResources().getColor(R.color.tagSp)
-                };
+                    List<XMLNode> sorted = new LinkedList<XMLNode>();
+                    sorted.addAll(result.children());
+                    Collections.sort(sorted, new Comparator<XMLNode>() {
+                        @Override public int compare(XMLNode t0, XMLNode t1) {
+                            int comp0 = t0.getFirstChildText("type").compareTo(t1.getFirstChildText("type")) * -1; //reverse sort those to get general tags to the bottom
+                            return (comp0 != 0 ? comp0 : t0.getFirstChildText("name").compareTo(t1.getFirstChildText("name")));
+                        }
+                    });
 
-                ColoredListAdapter cla = new ColoredListAdapter(PostShowActivity.this, R.id.singleline_listentry);
-                for (XMLNode n : sorted) {
-                    cla.add(n.getFirstChildText("name"), colors[Integer.parseInt(n.getFirstChildText("type"))]);
+                    int[] colors = new int[]{
+                            getResources().getColor(R.color.tagGe),
+                            getResources().getColor(R.color.tagAr),
+                            0,          //unused value
+                            getResources().getColor(R.color.tagCo),
+                            getResources().getColor(R.color.tagCh),
+                            getResources().getColor(R.color.tagSp)
+                    };
+
+                    ColoredListAdapter cla = new ColoredListAdapter(PostShowActivity.this, R.id.singleline_listentry);
+                    for (XMLNode n : sorted) {
+                        cla.add(n.getFirstChildText("name"), colors[Integer.parseInt(n.getFirstChildText("type"))]);
+                    }
+
+                    lstTags.setAdapter(cla);
                 }
-
-                lstTags.setAdapter(cla);
-            }
-        }).execute( baseURL +"tag/index.xml?post_id=" + data.getFirstChildText("id") );
+            }).execute(baseURL + "post/tags.xml?id=" + data.getFirstChildText("id"));
+        }
 
         //favorite check postload
         if (lm.isLoggedIn()) {
-            (new XMLTask(this) {
-                @Override protected void onPostExecute(XMLNode result) {
-                    if (result != null && result.getType().equals("posts")) {
-                        int faved = result.getChildCount();
-                        data.setAttribute("faved", String.valueOf(faved)); //getChildCount is more reliable than posts>count
-                        if (faved>0)
-                            ((ImageView) findViewById(R.id.bnFav)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_fav_on));
+            if (MiscStatics.canRequest(PostShowActivity.this)) {
+                (new XMLTask(this) {
+                    @Override protected void onPostExecute(XMLNode result) {
+                        if (result != null && result.getType().equals("posts")) {
+                            int faved = result.getChildCount();
+                            data.setAttribute("faved", String.valueOf(faved)); //getChildCount is more reliable than posts>count
+                            if (faved > 0)
+                                ((ImageView) findViewById(R.id.bnFav)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_fav_on));
+                        }
                     }
-                }
-            }).execute(baseURL + "post/index.xml?tags=" + URLEncoder.encode("id:" + data.getFirstChildText("id") + " fav:" + lm.getUsername()) );
+                }).execute(baseURL + "post/index.xml?tags=" + URLEncoder.encode("id:" + data.getFirstChildText("id") + " fav:" + lm.getUsername()));
+            }
         } else {
             //Logger.getLogger("a621").info("Not logged in");
         }
@@ -745,7 +752,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
         @Override protected void onPostExecute(File file) {
             Toast.makeText(context, (file == null || !file.exists() || !file.isFile() ? "Download failed!" : "Post downloaded"), Toast.LENGTH_LONG).show();
-        };
+        }
     }
 
     @Override

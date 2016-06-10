@@ -1,39 +1,30 @@
 package de.e621.rebane.activities;
 
-import android.app.SearchManager;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.Toast;
 
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.logging.Logger;
 
 import de.e621.rebane.MiscStatics;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.components.ForumListAdapter;
-import de.e621.rebane.components.PostListAdapter;
+import de.e621.rebane.components.listadapter.ForumListAdapter;
 import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLTask;
 
 public class BlipActivity extends DrawerWrapper implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
-    ListView lstTopics;
+    GridView lstTopics;
     ForumListAdapter results = null;
     LinearLayout pagebar;
     ImageView pageNext, pageLast, pageFirst;
@@ -48,13 +39,12 @@ public class BlipActivity extends DrawerWrapper implements SwipeRefreshLayout.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_forums);
-        onCreateDrawer();   //DrawerWrapper function that requires the layout to be set to prepare the drawer
-        DrawerWrapper.openActivity = this.getClass();   //block the drawer from reopening this activity while opened
+        setContentView(R.layout.activity_paginated_list);
+        onCreateDrawer(this.getClass());   //DrawerWrapper function that requires the layout to be set to prepare the drawer
 
         Logger.getLogger("a621").info("Activity created");
 
-        lstTopics =      (ListView)              findViewById(R.id.lstPostResults);
+        lstTopics =      (GridView)              findViewById(R.id.lstPostResults);
         swipeLayout =   (SwipeRefreshLayout)    findViewById(R.id.swipe_container);
         pagebar =       (LinearLayout)          findViewById(R.id.pagebar);
 

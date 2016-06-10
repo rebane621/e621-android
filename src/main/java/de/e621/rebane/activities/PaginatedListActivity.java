@@ -1,14 +1,17 @@
 package de.e621.rebane.activities;
 
+import android.annotation.SuppressLint;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewStub;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
@@ -22,7 +25,7 @@ import java.util.logging.Logger;
 import de.e621.rebane.MiscStatics;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.WebImageView;
-import de.e621.rebane.components.XMLListAdapter;
+import de.e621.rebane.components.listadapter.XMLListAdapter;
 import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLTask;
 
@@ -44,13 +47,16 @@ public abstract class PaginatedListActivity extends DrawerWrapper
 
     final static String SEARCHQUERYPAGE = "a621 Pagination Page";
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    @SuppressLint("MissingSuperCall")
+    @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
+        Logger.getLogger("a621").warning("Wrong super-call to PaginatedListActivity-Wrapper!\nUse onCreate(contentLayout, savedInstanceState) instead!");
+    }
+
+    protected void onCreate(int contentLayout, Bundle savedInstanceState) {
+        super.onCreate(contentLayout, savedInstanceState);
     }
     void postLayoutInflated(Class<? extends DrawerWrapper> subclass) {
-        onCreateDrawer();   //DrawerWrapper function that requires the layout to be set to prepare the drawer
-        DrawerWrapper.openActivity = subclass;   //block the drawer from reopening this activity while opened
+        onCreateDrawer(subclass);   //DrawerWrapper function that requires the layout to be set to prepare the drawer
 
         //Logger.getLogger("a621").info("Paginated List Activity created");
 
@@ -154,8 +160,14 @@ public abstract class PaginatedListActivity extends DrawerWrapper
         //if (results==null) searchPosts(query, page);  //subclass should call
     }
 
+    private boolean issearching = false;
     void searchPosts(String escapedQuery, int page) {
-        if (!MiscStatics.canRequest(this) || swipeLayout.isRefreshing()) return;
+        if (!MiscStatics.canRequest(this)) {
+            if (!issearching) swipeLayout.setRefreshing(false);
+            return;
+        }
+        if (issearching) return;
+        issearching=true;
         swipeLayout.setRefreshing(true);
 
         openDB();
@@ -166,7 +178,7 @@ public abstract class PaginatedListActivity extends DrawerWrapper
 
         Logger.getLogger("a621").info("Requesting page "+ baseURL + API_URI);
 
-        swipeLayout.setRefreshing(true);
+        //swipeLayout.setRefreshing(true);
         final int _page = page;
         final String _query = escapedQuery;
 
@@ -175,6 +187,7 @@ public abstract class PaginatedListActivity extends DrawerWrapper
             protected void onPostExecute(XMLNode result) {
 
                 swipeLayout.setRefreshing(false);
+                issearching=false;
                 if (result == null) { quickToast("Error while request / parsing!"); return; }
                 if (result.getChildCount() <= 0) { quickToast("No results found..."); return; }
 
@@ -186,6 +199,15 @@ public abstract class PaginatedListActivity extends DrawerWrapper
                 lstContent.setAdapter(results);
                 lstContent.refreshDrawableState();
 
+            }
+
+            @Override public void onExecutionFailed(Exception exc) {
+                runOnUiThread(new Runnable() {  // bigges. crap. ever.
+                    @Override public void run() {
+                        swipeLayout.setRefreshing(false);
+                    }
+                });
+                issearching=false;
             }
         }).execute( baseURL + API_URI + (API_LOGIN != null ? login.getLogin("&") : ""));
     }

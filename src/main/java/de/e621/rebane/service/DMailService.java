@@ -20,7 +20,7 @@ import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLReader;
 
 public class DMailService extends IntentService {
-    private static final long delay = 1000*30; //delay between checks
+    private static final long delay = 1000*60*5; //delay between checks
     public static final String DMAILLOGINEXTRA = "a621 DMail Login Extra";
     private static String login, userAgent;
     private static boolean running = false;

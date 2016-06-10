@@ -1,36 +1,24 @@
 package de.e621.rebane.activities;
 
+import android.annotation.SuppressLint;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.SearchView;
+import android.test.suitebuilder.annotation.Suppress;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.AbsListView;
-import android.widget.GridView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.logging.Logger;
 
-import de.e621.rebane.MiscStatics;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.components.PostListAdapter;
-import de.e621.rebane.components.WebImageView;
+import de.e621.rebane.components.listadapter.PostListAdapter;
 import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLTask;
 
 public class PostsActivity extends PaginatedListActivity
         implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
@@ -38,9 +26,10 @@ public class PostsActivity extends PaginatedListActivity
     Menu menu = null;
 
     @Override
+    @SuppressLint("MissingSuperCall")
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_posts);
+        super.onCreate(R.layout.content_posts, savedInstanceState);
+        //setContentView(R.layout.activity_posts);
         postLayoutInflated(this.getClass());
     }
 

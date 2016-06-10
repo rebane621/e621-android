@@ -11,12 +11,9 @@ import java.util.logging.Logger;
 
 import de.e621.rebane.components.WebImageView;
 
-/**
- * Created by Michael on 17.04.2016.
- */
 public class MiscStatics {
 
-    private static int maxRequests = 30;
+    private static int maxRequests = 32;
     private static List<Long> requestLimiter = new LinkedList<Long>();
     private static long limiterlasttoast=0; //to prevent toast spamming
     public static boolean canRequest(Context context) {
@@ -27,12 +24,19 @@ public class MiscStatics {
         requestLimiter.removeAll(remove);
 
         if (requestLimiter.size() < maxRequests) {
+            if (requestLimiter.size() >= maxRequests-7) {
+                long now = System.currentTimeMillis();
+                if (now-limiterlasttoast > 3000) {
+                    Toast.makeText(context, "Please slow down a bit", Toast.LENGTH_SHORT).show();
+                    limiterlasttoast = now;
+                }
+            }
             requestLimiter.add(System.currentTimeMillis());
             return true;
         }
         long now = System.currentTimeMillis();
         if (now-limiterlasttoast > 3000) {
-            Toast.makeText(context, "Too many requests!\nPlease don't stress the Server this much", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Too many requests!\nSome content may not display", Toast.LENGTH_SHORT).show();
             limiterlasttoast = now;
         }
         return false;

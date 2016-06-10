@@ -1,26 +1,25 @@
 package de.e621.rebane.activities;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewStub;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -29,7 +28,6 @@ import de.e621.rebane.LoginManager;
 import de.e621.rebane.MiscStatics;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.service.DMailService;
 
 public class DrawerWrapper extends AppCompatActivity
@@ -39,7 +37,7 @@ public class DrawerWrapper extends AppCompatActivity
     LoginManager login;
     public static SQLiteDB database = null;
     public static String baseURL;
-    public static Class<? extends DrawerWrapper> openActivity;
+    private static Class<? extends DrawerWrapper> openActivity;
 
     final static String LIMITEREXTRA = "RequestAmmountLimiterTimestampArray";
     void handleIntent(Intent intent) {
@@ -54,14 +52,25 @@ public class DrawerWrapper extends AppCompatActivity
         List<Long> rhist = MiscStatics.getRequestHistory();
         if (rhist.size()>0) {
             long[] vals = new long[rhist.size()];
-            for (int i = 0; i < rhist.size(); i++) vals[i] = (long) rhist.get(i);
+            for (int i = 0; i < rhist.size(); i++) vals[i] = rhist.get(i);
             outState.putLongArray(LIMITEREXTRA, vals);
         }
     }
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    @SuppressLint("MissingSuperCall")
+    @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
+        Logger.getLogger("a621").warning("Wrong super-call to DrawerWrapper!\nUse onCreate(contentLayout, savedInstanceState) instead!");
+    }
+
+    protected void onCreate(int contentLayout, @Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.wrapper_draweractivity);
+        ViewStub wrapper = ((ViewStub)findViewById(R.id.dynamicImport_drawer));
+        wrapper.setLayoutResource(contentLayout);
+        wrapper.inflate();
+
+        ActionBar toolbar = getSupportActionBar();
+        toolbar.setDisplayHomeAsUpEnabled(true);
 
         openDB();
         //blacklist = new FilterManager(this, database.getStringArray(SettingsActivity.SETTINGBLACKLIST));
@@ -114,18 +123,30 @@ public class DrawerWrapper extends AppCompatActivity
         MiscStatics.clearMem(this);
     }
 
-    protected void onCreateDrawer() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+    protected void onCreateDrawer(Class<? extends DrawerWrapper> subclass) {
+        ActionBar toolbar = getSupportActionBar();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         exDrawerListener toggle = new exDrawerListener(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, drawer, null, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        int id = 0;
+        if (subclass.equals(PostsActivity.class) || subclass.equals(PostShowActivity.class)) {
+            id = R.id.nav_posts;
+        } else if (subclass.equals(ForumsActivity.class)) {
+            id = R.id.nav_forum;
+        } else if (subclass.equals(DMailsActivity.class)) {
+            id = R.id.nav_dmail;
+        }
+        if (id != 0) {
+            navigationView.setCheckedItem(id);
+        }
+        openActivity=subclass;
     }
 
     private class exDrawerListener extends  ActionBarDrawerToggle implements DrawerLayout.DrawerListener {
@@ -171,19 +192,28 @@ public class DrawerWrapper extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            /*/Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setClass(this, SettingsActivity.class);
-            intent.putExtra(SettingsActivity.SETTINGDEFAULTSEARCH, database.getValue(SettingsActivity.SETTINGDEFAULTSEARCH));
-            intent.putExtra(SettingsActivity.SETTINGBASEURL, database.getValue(SettingsActivity.SETTINGBASEURL));
-            intent.putExtra(SettingsActivity.SETTINGBLACKLIST, database.getStringArray(SettingsActivity.SETTINGBLACKLIST));
-            startActivityForResult(intent, SettingsActivity.SETTING_CONFIRM);
-            /*/
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return true;
-        } else if (id == R.id.action_search) {
-
+        switch (id) {
+            case R.id.action_settings:
+                /*/Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setClass(this, SettingsActivity.class);
+                intent.putExtra(SettingsActivity.SETTINGDEFAULTSEARCH, database.getValue(SettingsActivity.SETTINGDEFAULTSEARCH));
+                intent.putExtra(SettingsActivity.SETTINGBASEURL, database.getValue(SettingsActivity.SETTINGBASEURL));
+                intent.putExtra(SettingsActivity.SETTINGBLACKLIST, database.getStringArray(SettingsActivity.SETTINGBLACKLIST));
+                startActivityForResult(intent, SettingsActivity.SETTING_CONFIRM);
+                /*/
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            case R.id.action_search:
+                break;
+            case android.R.id.home:
+                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+                if (drawer.isDrawerOpen(GravityCompat.START)) {
+                    drawer.closeDrawer(GravityCompat.START);
+                } else {
+                    drawer.openDrawer(GravityCompat.START);
+                }
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -228,7 +258,14 @@ public class DrawerWrapper extends AppCompatActivity
                 item.setTitle("Sign in");
             }
         } else if (id == R.id.nav_dmail) {
-
+            if (!login.isLoggedIn()) {
+                Toast.makeText(this, "Login required!", Toast.LENGTH_SHORT).show();
+            } else if (login.getUserid()==null) {
+                Toast.makeText(this, "Limited login :/", Toast.LENGTH_SHORT).show();
+            } else {
+                Intent intent = new Intent(getApplicationContext(), DMailsActivity.class);
+                this.startActivity(intent);
+            }
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
