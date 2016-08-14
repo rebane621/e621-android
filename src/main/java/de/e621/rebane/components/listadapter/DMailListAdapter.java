@@ -1,6 +1,7 @@
 package de.e621.rebane.components.listadapter;
 
 import android.content.Context;
+import android.media.CamcorderProfile;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,10 +21,11 @@ public class DMailListAdapter extends XMLListAdapter {
 
     public int getLastPage(int pagesize) {
         return 100;
-    }
+    } //can't be computed
 
     public DMailListAdapter(Context context, int textViewResourceId, List<XMLNode> rowDataList) {
         super(context, textViewResourceId, rowDataList);
+        svNumPosts = Integer.MAX_VALUE; //can't be computed
     }
 
     public View getView(final int position, View convertView, ViewGroup parent) {
@@ -38,16 +40,7 @@ public class DMailListAdapter extends XMLListAdapter {
         XMLNode tmp = list.get(position);
         //Logger.getLogger("a621").info(tmp.toString());
 
-        Integer from = Integer.parseInt(tmp.getFirstChildText("from-id")),
-            to = Integer.parseInt(tmp.getFirstChildText("to-id"));
-        Integer dir = (lm.getUserid() == null ? 0 : (lm.getUserid().compareTo(to)!=0 ? 1 : -1));
-        int colorcode = (dir < 0 ? getContext().getResources().getColor(R.color.preview_green) :
-                            (dir > 0 ? getContext().getResources().getColor(R.color.preview_red) :
-                            getContext().getResources().getColor(R.color.text_neutral)));
-        Logger.getLogger("a621").info(String.format("f%d - t%d - u%d > %d", from, to, lm.getUserid(), dir));
-        holder.populate(position, convertView,
-                HTMLformat.colored((Boolean.parseBoolean(tmp.getFirstChildText("has-seen"))?"":"* ")+tmp.getFirstChildText("title"), colorcode),
-                from + " > " + to + " - " + MiscStatics.readableTime(tmp.getFirstChildText("created-at")));
+        holder.populate(position, convertView, tmp, lm);
 
         return convertView;
     }

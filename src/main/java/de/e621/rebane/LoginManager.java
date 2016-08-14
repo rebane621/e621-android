@@ -6,6 +6,9 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.SettingsActivity;
@@ -22,6 +25,7 @@ public class LoginManager {
     static Boolean isBusy = false;
     static Integer userid = null;
     static Integer avatarid = null;
+    static String avatarurl = null;
 
     public LoginManager(Context context, SQLiteDB openedDB) {
         this.context = context;
@@ -52,6 +56,8 @@ public class LoginManager {
                 try { avatarid = Integer.parseInt(val); }
                 catch (Exception e) { avatarid = null; }
             }
+            val = db.getValue("useravatarurl");
+            avatarurl = val==null?null: URLDecoder.decode(val);
         }
         return URLappendix;
     }
@@ -98,11 +104,22 @@ public class LoginManager {
                                 eee.printStackTrace();
                                 onExecutionFailed(eee);
                             }  //well, fack it
+
+                            if (avatarid != null && avatarid>0) {
+                                new XMLTask(context) {
+                                    @Override protected void onPostExecute(XMLNode result) {
+                                        if (result==null || result.getChildCount()==0) return;
+                                        avatarurl = result.getFirstChildText("sample_url");
+                                        db.setValue("useravatarurl", URLEncoder.encode(avatarurl));
+                                    }
+                                }.execute(baseURL + "post/show.xml?id=" + avatarid);
+                            }
                         }
 
                         @Override public void onExecutionFailed(Exception exc) {
                             userid=null;
                             avatarid=null;
+                            avatarurl=null;
                             Toast.makeText(context, "Unable to get user data", Toast.LENGTH_LONG).show();
                         }
                     }.execute(baseURL + "user/index.xml?name=" + username);
@@ -128,13 +145,15 @@ public class LoginManager {
         db.setValue("username", "");
         db.setValue("userid", "");
         db.setValue("useravatarid", "");
+        db.setValue("useravatarurl", "");
     }
 
     public String getUsername() {
         return username;
     }
     public Integer getUserid() { return userid; }
-    public Integer getAvatarid() { return  avatarid; }
+    public Integer getAvatarid() { return avatarid; }
+    public String getAvatarurl() { return avatarurl; }
 
     private static LoginManager instance = null;
     public static LoginManager getInstance(Context context, SQLiteDB openedDB) {

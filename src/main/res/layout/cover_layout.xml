@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:background="@color/colorPrimary"
+                android:padding="4dp"
+                android:id="@+id/container">
+
+    <de.e621.rebane.components.FixedAspectRatioFrameLayout
+        android:id="@+id/farLay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:aspectRatioHeight="4"
+        app:aspectRatioWidth="4"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="false"
+        android:layout_alignParentRight="true"
+        android:padding="0dp">
+
+        <de.e621.rebane.components.WebImageView
+            android:id="@+id/previewImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:layout_gravity="center"
+            android:saveEnabled="false"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            />
+
+    </de.e621.rebane.components.FixedAspectRatioFrameLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="txtName"
+        android:id="@+id/txtName"
+        android:layout_below="@+id/farLay"
+        android:layout_centerHorizontal="true"
+        android:textAlignment="gravity"
+        android:gravity="center"
+        android:background="@drawable/rank_avatar_decor"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/txtDesc"
+        android:textStyle="bold"
+        android:textColor="@color/text_neutral"
+        android:text="txtDesc"
+        android:layout_below="@+id/txtName"
+        android:layout_centerHorizontal="true"/>
+
+</RelativeLayout>

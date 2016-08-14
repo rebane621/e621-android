@@ -138,7 +138,7 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
             //set max post age to freemem * 60 sec
             cleanmaxage = (int)(60*freePerc/100);
             if (cleanmaxage < 5) { cleanmaxage=5; }
-            Runtime.getRuntime().gc();
+            //Runtime.getRuntime().gc(); don't call it manually... the system should do that
             if (freeRam < 8) Toast.makeText(context, "Image Cache:\nFree RAM < 8 MiB!", Toast.LENGTH_SHORT).show();
         } else {
             if (now-lastcleantime > cleanmaxage) {    //grant some more space every CLEANINGMAXAGE seconds, if the ram was ok, so if you're browsing slow, it's cleaning even slower
@@ -190,6 +190,7 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
                 BufferedInputStream bis = new BufferedInputStream(urlc.getInputStream());
                 if (cacheDir != null) {
                     int count;
+                    //int maxp=urlc.getContentLength(), p=0;
                     OutputStream output = null;
                     //int lenghtOfFile = urlc.getContentLength();
                     boolean success=false;
@@ -203,6 +204,7 @@ public class WebImageView extends GifImageView {    //just to allow gifs, do not
                         byte data[] = new byte[1024];
 
                         while ((count = bis.read(data)) != -1) {
+                            //p+=count; Logger.getLogger("a621").info("Download: " + p + "/" + maxp);
                             output.write(data, 0, count);
                         }
                         output.flush();

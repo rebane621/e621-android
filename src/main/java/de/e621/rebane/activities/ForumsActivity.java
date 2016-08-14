@@ -11,6 +11,8 @@ import de.e621.rebane.a621.R;
 import de.e621.rebane.components.listadapter.ForumListAdapter;
 import de.e621.rebane.xmlreader.XMLNode;
 
+
+/** with what little information is returned by the forum API I won't continue that for now */
 public class ForumsActivity extends PaginatedListActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
 
     final static String FORUMQUERYPAGE = "a621 SearchManager Forum Page";
@@ -58,7 +60,8 @@ public class ForumsActivity extends PaginatedListActivity implements SwipeRefres
     @Override void onSearchResult(XMLNode result, String query, int page) {
         results = new ForumListAdapter(getApplicationContext(), R.id.lblTitle, result.children());
         //results.svNumPosts = (result.attributes().contains("count") ? Integer.valueOf(result.getAttribute("count")) : 0); //this value is not provided
-        ForumsActivity.this.page = page;
+        this.page = page;
+
 
         ActionBar ab = getSupportActionBar();
         ab.setTitle(getResources().getString(R.string.title_forums) + " | " + page);

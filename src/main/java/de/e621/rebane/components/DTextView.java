@@ -6,6 +6,7 @@ import android.util.AttributeSet;
 import android.widget.TextView;
 
 import de.e621.rebane.DTextParser;
+import de.e621.rebane.MiscStatics;
 
 public class DTextView extends TextView {
 
@@ -23,7 +24,8 @@ public class DTextView extends TextView {
 
     public void setDText(String raw) {
         String html = DTextParser.parse(raw); //returns HTML
-        setText(Html.fromHtml(html));
+        MiscStatics.setTextViewHTML(this, html);
+        //setText(Html.fromHtml(html));
     }
 
 

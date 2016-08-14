@@ -19,6 +19,7 @@ import java.lang.reflect.Array;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.FolderChooser;
 import de.e621.rebane.activities.PostShowActivity;
+import de.e621.rebane.activities.PostsActivity;
 import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.xmlreader.XMLNode;
 
@@ -30,7 +31,7 @@ public class PostListViewHolder {
     String imageQuality;
     public PostListViewHolder(String quality, ArrayAdapter parent) { imageQuality = quality; parentAdapter = parent; }
 
-    public void populate(int position, View convertView, final XMLNode data) {
+    public void populate(final int position, View convertView, final XMLNode data, final int pageoffset, final String query) {
         previewImage = (WebImageView) convertView.findViewById(R.id.previewImage);
         txtLeft = (TextView) convertView.findViewById(R.id.txtLeft);
         txtMid = (TextView) convertView.findViewById(R.id.txtMid);
@@ -43,6 +44,8 @@ public class PostListViewHolder {
                 //Toast.makeText(getContext(), "Entry " + position + " was pressed", Toast.LENGTH_LONG).show();
                 Intent intent = new Intent(view.getContext(), PostShowActivity.class);
                 intent.putExtra(PostShowActivity.EXTRAPOSTDATA, data);
+                intent.putExtra(PostShowActivity.EXTRASEARCHQUERY, query);
+                intent.putExtra(PostShowActivity.EXTRASEARCHOFFSET, pageoffset+position+1); //counting natural (+1)
                 view.getContext().startActivity(intent);
             }
         });

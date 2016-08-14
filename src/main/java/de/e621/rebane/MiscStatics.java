@@ -1,6 +1,16 @@
 package de.e621.rebane;
 
+import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.text.Html;
+import android.text.SpannableStringBuilder;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.URLSpan;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
@@ -56,6 +66,19 @@ public class MiscStatics {
         return "???";
     }
 
+    public static boolean isOrderRandomQuery(String query) {
+        if (query == null) return false;
+        boolean result = query.toLowerCase().matches("\\border:random\\b");
+        Logger.getLogger("a621").info("Random enabled? " + result + ": " + query);
+        return result;
+    }
+    public static boolean isOrderRandomQueryURLescaped(String query) {
+        if (query == null) return false;
+        boolean result = query.toLowerCase().matches("(?:^|.*[+]{1})order%3arandom(?:$|[+]{1}.*)");
+        Logger.getLogger("a621").info("Random enabled? " + result + ": " + query);
+        return result;
+    }
+
     public static String readableTime(String text) {
         long time;
         if (text.contains("T")) {
@@ -103,4 +126,38 @@ public class MiscStatics {
         Runtime rt = Runtime.getRuntime();
         return ((float)(rt.maxMemory()-(rt.totalMemory()-rt.freeMemory()))/rt.maxMemory())*100;
     }
+
+    //functions to add custom link listeners to links in html text for textViews
+    //http://stackoverflow.com/questions/12418279/android-textview-with-clickable-links-how-to-capture-clicks
+
+    public static void makeLinkClickable(SpannableStringBuilder strBuilder, final URLSpan span) {
+        int start = strBuilder.getSpanStart(span);
+        int end = strBuilder.getSpanEnd(span);
+        int flags = strBuilder.getSpanFlags(span);
+        ClickableSpan clickable = new ClickableSpan() {
+            public void onClick(View view) {
+                // Do something with span.getURL() to handle the link click...
+                /*if (span.getURL().startsWith("baseURL")) {
+                    //TODO stay in app
+                } else  */
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(span.getURL()));
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //running from 'outside' and activity
+                view.getContext().getApplicationContext().startActivity(intent);
+            }
+        };
+        strBuilder.setSpan(clickable, start, end, flags);
+        strBuilder.removeSpan(span);
+    }
+
+    public static void setTextViewHTML(TextView text, String html) {
+        CharSequence sequence = Html.fromHtml(html);
+        SpannableStringBuilder strBuilder = new SpannableStringBuilder(sequence);
+        URLSpan[] urls = strBuilder.getSpans(0, sequence.length(), URLSpan.class);
+        for(URLSpan span : urls) {
+            makeLinkClickable(strBuilder, span);
+        }
+        text.setText(strBuilder);
+        text.setMovementMethod(LinkMovementMethod.getInstance());
+    }
+
 }

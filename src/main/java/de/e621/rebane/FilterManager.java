@@ -1,8 +1,12 @@
 package de.e621.rebane;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.support.v4.util.SimpleArrayMap;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -23,6 +27,11 @@ public class FilterManager {
 
         Blacklist = blacklists;
         this.context = context;
+
+        if (tagPostLinker.isEmpty()) {
+            tagPostLinker.put("favorites", "fav_count");
+            tagPostLinker.put("filesize", "file_size");
+        }
     }
 
     public List<XMLNode> proxyBlacklist(List<XMLNode> toCheck) {
@@ -53,6 +62,34 @@ public class FilterManager {
         return listed;
     }
 
+    public String getHighlightedHtml(XMLNode check) {
+        Set<String> hits = new LinkedHashSet<String>();
+
+        //build set of "hits"
+        String tgs = check.getFirstChildText("tags");
+        if ( !(tgs == null || tgs.trim().isEmpty()) ) {
+            for (String bl : Blacklist) {
+                //hastags && not filter applies
+                String[] tags = bl.split(" ");
+                for (String tag : tags) {
+                    if (compareTags(check, tag)) { hits.add(tag); }
+                }
+            }
+        }
+
+        //build formatted result
+        String[] tags = tgs.split(" ");
+        StringBuilder result = new StringBuilder(); boolean first=true;
+        for (String tag : tags) {
+            if (first) first=false;
+            else result.append(' ');
+            if (hits.contains(tag)) result.append(HTMLformat.colored(tag, Color.RED));
+            else result.append(tag);
+        }
+
+        return result.toString();
+    }
+
     static boolean filterApplies(XMLNode node, String filter) {	//filter may contain spaces
         String[] tags = filter.split(" ");
         boolean result = true;
@@ -67,6 +104,7 @@ public class FilterManager {
         if (tag.startsWith("-") && tag.length()>1) { fail = true; tag = tag.substring(1); }
         if (tag.indexOf(':')>0) {	//seach for metatag
             String k = tag.substring(0,tag.indexOf(':'));
+            if (tagPostLinker.containsKey(k)) k = tagPostLinker.get(k);
             String v = tag.substring(tag.indexOf(':')+1);
             String nv;
             switch (k) {
@@ -86,7 +124,8 @@ public class FilterManager {
                     sorting = new XMLComparator(v, !asc);
                     break;/*/
                 default:
-                    nv = node.getChildrenByTagName(k)[0].getInnerText();
+                    nv = node.getFirstChildText(k);
+                    if (nv == null) return !fail; //skip invalid tag
 
                     if (numericFilter.matcher(v).matches()) {
                         return numCompare(v,nv) == !fail;
@@ -135,4 +174,7 @@ public class FilterManager {
             }
         } catch (NumberFormatException e) { return false; }
     }
+
+    static SimpleArrayMap<String, String> tagPostLinker = new SimpleArrayMap<>();
+
 }

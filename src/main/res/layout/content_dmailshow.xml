@@ -15,6 +15,14 @@
 
     <!-- Login progress -->
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Topic"
+        android:id="@+id/lblTopic"
+        android:textColor="@android:color/white"/>
+
     <GridLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -83,10 +91,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="/dmail/show does not work right now"
             android:id="@+id/lblMessage"
             android:textColor="#fff"
-            />
+            android:text="Message Body"/>
     </ScrollView>
 
     <LinearLayout

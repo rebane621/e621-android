@@ -10,24 +10,26 @@ import java.util.List;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.xmlreader.XMLNode;
 
-public class ForumListAdapter extends XMLListAdapter {
+public class CoverListAdapter extends XMLListAdapter {
 
     public int getLastPage(int pagesize) {
-        return 100;
+        return Integer.MAX_VALUE;
     } //can't be retrieved
+    String listType;
 
-    public ForumListAdapter(Context context, int textViewResourceId, List<XMLNode> rowDataList) {
+    public CoverListAdapter(Context context, int textViewResourceId, List<XMLNode> rowDataList, String quality, String type) {
         super(context, textViewResourceId, rowDataList);
+        listType = type;
         svNumPosts = Integer.MAX_VALUE; //can't be computed
     }
 
     public View getView(final int position, View convertView, ViewGroup parent) {
-        ForumViewHolder holder = new ForumViewHolder();
+        CoverViewHolder holder = new CoverViewHolder();
 
         LayoutInflater inflator = LayoutInflater.from(parent.getContext());
-        convertView = inflator.inflate(R.layout.twolined_listentry, parent, false);
+        convertView = inflator.inflate(R.layout.cover_layout, parent, false);
 
-        holder.populate(position, convertView, list.get(position));
+        holder.populate(position, convertView, list.get(position), listType);
 
         return convertView;
     }

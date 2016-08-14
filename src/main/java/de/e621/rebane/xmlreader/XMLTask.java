@@ -68,6 +68,7 @@ public abstract class XMLTask extends AsyncTask<String, Void, XMLNode> {
             Logger.getLogger("a621").info("Connected with response code " + urlc.getResponseCode() + ": " + urlc.getResponseMessage());
 
             XMLNode result = (reader = new XMLReader()).parse(bis);
+            reader.clearReader();
 
             return result;
         } catch (Exception exc) {

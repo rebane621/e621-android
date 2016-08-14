@@ -32,4 +32,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.android.support:design:23.1.1'
     compile 'com.github.koral--:android-gif-drawable:v1.1.15'
+    compile 'com.google.android.gms:play-services-appindexing:8.1.0'
 }

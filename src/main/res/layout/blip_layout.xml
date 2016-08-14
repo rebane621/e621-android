@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_margin="4dp"
+              android:background="@drawable/thumb_bnormal">
+
+    <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:padding="4dp"
+                  android:orientation="horizontal"
+                  android:weightSum="1">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:gravity="right">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Username"
+                android:id="@+id/lblName"
+                android:textColor="@android:color/white"
+                android:clickable="true"/>
+
+            <de.e621.rebane.components.WebImageView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:id="@+id/imgAvatar"
+                android:adjustViewBounds="true"
+                android:maxHeight="120dp"
+                android:maxWidth="100dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Rank"
+                android:id="@+id/lblRank"
+                android:textColor="@color/colorPrimaryDark"
+                android:background="@drawable/rank_avatar_decor"
+                android:gravity="center_horizontal"/>
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="8dp"
+            android:clickable="true">
+
+            <de.e621.rebane.components.DTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New Text"
+                android:id="@+id/txtComment"
+                android:textColor="@android:color/white"/>
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Action"
+            android:id="@+id/txtAction"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:textColor="@color/text_neutral"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="48dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="0dp"/>
+    </RelativeLayout>
+</LinearLayout>

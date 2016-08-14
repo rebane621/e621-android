@@ -28,7 +28,10 @@ import de.e621.rebane.LoginManager;
 import de.e621.rebane.MiscStatics;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
+import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.service.DMailService;
+import de.e621.rebane.xmlreader.XMLNode;
+import de.e621.rebane.xmlreader.XMLTask;
 
 public class DrawerWrapper extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -37,7 +40,7 @@ public class DrawerWrapper extends AppCompatActivity
     LoginManager login;
     public static SQLiteDB database = null;
     public static String baseURL;
-    private static Class<? extends DrawerWrapper> openActivity;
+    private Class<? extends DrawerWrapper> openActivity;
 
     final static String LIMITEREXTRA = "RequestAmmountLimiterTimestampArray";
     void handleIntent(Intent intent) {
@@ -72,6 +75,8 @@ public class DrawerWrapper extends AppCompatActivity
         ActionBar toolbar = getSupportActionBar();
         toolbar.setDisplayHomeAsUpEnabled(true);
 
+        WebImageView.clear(); //we don't need data from the old page, keeping mem low
+
         openDB();
         //blacklist = new FilterManager(this, database.getStringArray(SettingsActivity.SETTINGBLACKLIST));
         baseURL = database.getValue(SettingsActivity.SETTINGBASEURL);
@@ -83,6 +88,8 @@ public class DrawerWrapper extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         openDB();
+
+        updateDrawer();
 
         //to be able to respond to settings, the following is here:
         blacklist = new FilterManager(this, database.getStringArray(SettingsActivity.SETTINGBLACKLIST));
@@ -135,18 +142,29 @@ public class DrawerWrapper extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        openActivity=subclass;
+        updateDrawer();
+    }
+
+    protected void updateDrawer() {
         int id = 0;
-        if (subclass.equals(PostsActivity.class) || subclass.equals(PostShowActivity.class)) {
+        if (openActivity.equals(PostsActivity.class) || openActivity.equals(PostShowActivity.class)) {
             id = R.id.nav_posts;
-        } else if (subclass.equals(ForumsActivity.class)) {
+        } else if (openActivity.equals(PoolsActivity.class)) {
+            id = R.id.nav_pools;
+        } else if (openActivity.equals(SetsActivity.class)) {
+            id = R.id.nav_sets;
+        } else if (openActivity.equals(BlipActivity.class)) {
+            id = R.id.nav_blips;
+        } else if (openActivity.equals(ForumsActivity.class)) {
             id = R.id.nav_forum;
-        } else if (subclass.equals(DMailsActivity.class)) {
+        } else if (openActivity.equals(DMailsActivity.class)) {
             id = R.id.nav_dmail;
         }
         if (id != 0) {
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
             navigationView.setCheckedItem(id);
         }
-        openActivity=subclass;
     }
 
     private class exDrawerListener extends  ActionBarDrawerToggle implements DrawerLayout.DrawerListener {
@@ -168,7 +186,14 @@ public class DrawerWrapper extends AppCompatActivity
             boolean loggedIn = login.isLoggedIn();
             nav_login.setTitle(loggedIn ? "Log out" : "Sign in");
             TextView tv = (TextView) findViewById(R.id.drawerLoginName);
-            tv.setText(loggedIn?login.getUsername():"Guest");
+            tv.setText(loggedIn ? login.getUsername() : "Guest");
+            WebImageView avatar = (WebImageView) findViewById(R.id.nav_avatar);
+            if (loggedIn) {
+                String aurl = login.getAvatarurl();
+                if (aurl != null) avatar.setImageUrl("avatar", aurl, true);
+            } else {
+                avatar.setPlaceholderImage(R.mipmap.ic_avatar);
+            }
         }
 
         @Override public void onDrawerClosed(View drawerView) {
@@ -239,12 +264,15 @@ public class DrawerWrapper extends AppCompatActivity
         if (id == R.id.nav_posts && !openActivity.equals(PostsActivity.class)) {
             Intent intent = new Intent(getApplicationContext(), PostsActivity.class);
             this.startActivity(intent);
-        } else if (id == R.id.nav_pools) {
-
-        } else if (id == R.id.nav_sets) {
-
-        } else if (id == R.id.nav_blips) {
-
+        } else if (id == R.id.nav_pools && !openActivity.equals(PoolsActivity.class)) {
+            Intent intent = new Intent(getApplicationContext(), PoolsActivity.class);
+            this.startActivity(intent);
+        } else if (id == R.id.nav_sets && !openActivity.equals(SetsActivity.class)) {
+            Intent intent = new Intent(getApplicationContext(), SetsActivity.class);
+            this.startActivity(intent);
+        } else if (id == R.id.nav_blips && !openActivity.equals(BlipActivity.class)) {
+            Intent intent = new Intent(getApplicationContext(), BlipActivity.class);
+            this.startActivity(intent);
         } else if (id == R.id.nav_forum && !openActivity.equals(ForumsActivity.class)) {
             Intent intent = new Intent(getApplicationContext(), ForumsActivity.class);
             this.startActivity(intent);

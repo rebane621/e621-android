@@ -45,7 +45,7 @@ public abstract class LoginTask extends AsyncTask<String, Void, Boolean> {
             InputStream bis = urlc.getInputStream();
             Logger.getLogger("a621").info("Connected with response code " + urlc.getResponseCode() + ": " + urlc.getResponseMessage());
 
-            XMLNode result = XMLReader.parse(bis);
+            XMLNode result = reader.parse(bis);
 
             if (result.getType().equals("error")) {
                 db.setValue("password", "");
@@ -62,7 +62,7 @@ public abstract class LoginTask extends AsyncTask<String, Void, Boolean> {
         } catch (Exception e) {
             ret = false;
         }
-        XMLReader.clearReader();
+        reader.clearReader();
         return ret;
     }
 

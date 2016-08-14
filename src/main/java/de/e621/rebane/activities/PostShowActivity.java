@@ -2,6 +2,7 @@ package de.e621.rebane.activities;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -22,6 +23,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -34,6 +36,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.MediaController;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -63,6 +66,7 @@ import de.e621.rebane.MiscStatics;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.DTextView;
+import de.e621.rebane.components.OnSwipeTouchListener;
 import de.e621.rebane.components.TouchImageView;
 import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.components.listadapter.ColoredListAdapter;
@@ -75,7 +79,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
     private static final int REQUEST_WRITE_STORAGE = 112;
 
     ImageView bnMore, bnComments;
-    View postInfo, postComments, layMore;
+    View postInfo, postComments, layMore, progressBar;
 
     List<TextView> notes = null;
 
@@ -88,6 +92,11 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
     ListView lstTags, lstComments;
     public static final String EXTRAPOSTDATA = "PostShowXMLNodeExtraObject";
     public static final String EXTRAPOSTID = "PostShowByIDExtraObject";
+    public static final String EXTRASEARCHQUERY = "PostShowPaginationQuery";
+    public static final String EXTRASEARCHOFFSET = "PostShowPaginationOffset";
+    public static final String EXTRAPOOLID = "PostShowBrowsePoolID";
+    public static final String EXTRASETID = "PostShowBrowseSetID";
+    public static final String EXTRAPAGINATED = "PostShowSourceIsSwipe";
     XMLNode data;
     CommentListAdapter results = null;
     String baseURL = null;
@@ -127,15 +136,116 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         webmImage = (VideoView)         findViewById(R.id.videoView);
         lstTags =   (ListView)          findViewById(R.id.lstTags);
         lstComments = (ListView)        findViewById(R.id.lstComments);
+        progressBar =                    findViewById(R.id.progressBar);
         bnMore.setOnClickListener(this);
         bnComments.setOnClickListener(this);
         (findViewById(R.id.bnRateUp)).setOnClickListener(this);
         (findViewById(R.id.bnRateDown)).setOnClickListener(this);
         (findViewById(R.id.bnFav)).setOnClickListener(this);
 
+        ActionBar ab = getSupportActionBar();
+        if (getResources().getConfiguration().orientation == getResources().getConfiguration().ORIENTATION_LANDSCAPE) {
+            ab.hide();
+            layMore.setVisibility(View.GONE);
+        }
+
+        Logger.getLogger("a621").info("Received: Pool " + getIntent().getIntExtra(EXTRAPOOLID, -1) + ", Set " + getIntent().getIntExtra(EXTRASETID, -1));
+        OnSwipeTouchListener stl = new OnSwipeTouchListener(this, 0.33, 0.05) { //move at least 33% of the screen with 15% of the screen per second(?? called speed)
+            public static final int poolPageSize=24;
+
+            View screen = findViewById(R.id.activityBody);
+            String q = getIntent().getStringExtra(EXTRASEARCHQUERY);
+            boolean rand = MiscStatics.isOrderRandomQueryURLescaped(q);
+            Integer o = (rand?1:getIntent().getIntExtra(EXTRASEARCHOFFSET, 0));
+            int pool = getIntent().getIntExtra(EXTRAPOOLID, -1), set = getIntent().getIntExtra(EXTRASETID, -1);
+
+            private void performSwipe(final String url, final int index, final int newOffset) {
+                Logger.getLogger("a621").info("Requesting " + url);
+                if (!MiscStatics.canRequest(PostShowActivity.this) || progressBar.getVisibility()==View.VISIBLE) return;
+                progressBar.setVisibility(View.VISIBLE);
+                new XMLTask(PostShowActivity.this) {
+                    @Override protected void onPostExecute(XMLNode result) {
+                        progressBar.setVisibility(View.GONE);
+                        if (!result.getType().equals("posts")){ //try to return the first "posts" element found
+                            XMLNode[] wat = result.getElementsByTagName("posts");
+                            if (wat.length>0) result = wat[0];
+                        }
+                        if (result == null || !result.getType().equals("posts") || result.getChildCount()<=index) {
+                            quickToast("No results");
+                        } else {
+                            XMLNode child0 = result.getChildren()[index];
+                            Intent prev = new Intent(PostShowActivity.this, PostShowActivity.class);
+                            SQLiteDB database = new SQLiteDB(PostShowActivity.this); database.open(); //required for blacklist string
+                            if (new FilterManager(PostShowActivity.this, database.getStringArray(SettingsActivity.SETTINGBLACKLIST)).isBlacklisted(child0))
+                                child0.setAttribute("Blacklisted", "true");
+                            prev.putExtra(EXTRAPOSTDATA, child0);
+                            if (pool>=0)
+                                prev.putExtra(EXTRAPOOLID, pool);
+                            else if (set>=0)
+                                prev.putExtra(EXTRASETID, set);
+                            else
+                                prev.putExtra(EXTRASEARCHQUERY, q);
+                            prev.putExtra(EXTRASEARCHOFFSET, newOffset);
+                            prev.putExtra(EXTRAPAGINATED, true);
+                            PostShowActivity.this.startActivity(prev);
+                            finish();
+                        }
+                    }
+                }.execute(baseURL + url);
+            }
+
+            //i would like to work with something like after_id, but that's not available
+            @Override public void onSwipeRight(MotionEvent start, MotionEvent stop) {
+                if (start.getX()<(screen.getWidth()*0.1)) {
+                    int prev = (o<1?0:o-1);
+                    if (prev==0) { quickToast(rand?"Reloading...":"First post reached (reloading)"); }
+                    Logger.getLogger("a621").info("Searching prev for " + q + " [" + prev + (rand?"] R":"]"));
+
+                    String url; int index;
+                    if (pool>=0) {
+                        url="pool/show.xml?id="+pool+"&page="+(int)(prev/poolPageSize+1); //page size for pools is 24? (natural counting)
+                        index=(int)(prev%poolPageSize);
+                    } else if (set>=0) {
+                        url="post/index.xml?tags=set%3A" + set + "+order%3Aset&limit=1&page=" + prev;
+                        index=0;
+                    } else {
+                        url="post/index.xml?tags=" + q + "&limit=1&page=" + prev;
+                        index=0;
+                    }
+
+                    performSwipe(url, index, prev);
+                }
+            }
+            @Override public void onSwipeLeft(MotionEvent start, MotionEvent stop) {
+                if (start.getX()+(screen.getWidth()*0.1) > screen.getWidth()) {
+                    int next = (rand?0:o+1); //just causing stress on the server if offsetting too much on random queries
+                    Logger.getLogger("a621").info("Searching next for " + q + " [" + next + (rand?"] R":"]"));
+
+                    String url; int index;
+                    if (pool>=0) {
+                        url="pool/show.xml?id="+pool+"&page="+(int)(next/poolPageSize+1); //page size for pools is 24? (natural counting)
+                        index=(int)(next%poolPageSize);
+                    } else if (set>=0) {
+                        url="post/index.xml?tags=set%3A" + set + "+order%3Aset&limit=1&page=" + next;
+                        index=0;
+                    } else {
+                        url="post/index.xml?tags=" + q + "&limit=1&page=" + next;
+                        index=0;
+                    }
+
+                    performSwipe(url, index, next);
+                }
+            }
+            @Override public void onSwipeTop(MotionEvent start, MotionEvent stop) {}
+            @Override public void onSwipeBottom(MotionEvent start, MotionEvent stop) {}
+        };
+        imgImage.setOnTouchListener(stl);
+        webmImage.setOnTouchListener(stl);
+        findViewById(R.id.activityBody).setOnTouchListener(stl); //for others
+
         imgImage.setOnTouchImageViewListener(new TouchImageView.OnTouchImageViewListener() {
             @Override public void onMove() {
-                Logger.getLogger("a621").info("Current scale: " + imgImage.getCurrentZoom() + " " + (imgImage.getCurrentZoom() == imgImage.getMinZoom()) + " " + (imgImage.getCurrentZoom() == imgImage.getMaxZoom()));
+                //Logger.getLogger("a621").info("Current scale: " + imgImage.getCurrentZoom() + " " + (imgImage.getCurrentZoom() == imgImage.getMinZoom()) + " " + (imgImage.getCurrentZoom() == imgImage.getMaxZoom()));
                 if (notes != null && !notes.isEmpty()) {
                     if (imgImage.getCurrentZoom() == 1.0)
                         for (TextView tv : notes)
@@ -317,14 +427,18 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                                 break;
 
                             case DialogInterface.BUTTON_NEGATIVE:
-                                PostShowActivity.this.finish(); //user does not want to show blacklisted Post
+                                //user does not want to show blacklisted Post
+                                if (!getIntent().getBooleanExtra(EXTRAPAGINATED, false))
+                                    PostShowActivity.this.finish();
                                 break;
                         }
                     }
                 };
+                FilterManager blakclist = new FilterManager(getApplicationContext());
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 TextView fMsg = new TextView(this);
-                fMsg.setText(Html.fromHtml("<big>Blacklist</big><br>This post contains blacklisted tags!<br><small>Post Tags: " + data.getFirstChildText("tags") + "</small><br><br>Do you want to continue?"));
+                fMsg.setPadding(8,8,8,8);
+                fMsg.setText(Html.fromHtml("<big>Blacklist</big><br>This post contains blacklisted tags!<br><small>Post Tags: " + blacklist.getHighlightedHtml(data) + "</small><br><br>Do you want to continue?"));
                 builder.setView(fMsg)
                         .setPositiveButton("Yes", dialogClickListener)
                         .setNegativeButton("No", dialogClickListener)
@@ -337,6 +451,18 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
     void postLoadPost() {
         boolean deleted;
+
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        int memc =  activityManager.getLargeMemoryClass();
+        Logger.getLogger("a621").info("MemoryClass: " + memc);
+
+        double frp = MiscStatics.freeRamPerc();
+        long frb = MiscStatics.freeRamB();
+        String quality = "file_url";
+        int fsz = Integer.valueOf(data.getFirstChildText("file_size"));
+        if (frb * 0.66 < fsz || frb < (memc/2.0)*1024*1024) WebImageView.clear();   //purge everything while trying to get at least 15 MiB RAM for the file + 8 for the rest
+        else MiscStatics.clearMem(this, fsz / (1024 * 1024), 50.0);
+
         String type = data.getFirstChildText("status");
         if (deleted = type.equalsIgnoreCase("deleted")) { //active, flagged, pending, deleted
             imgImage.setVisibility(View.VISIBLE);
@@ -368,16 +494,10 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                     Toast.makeText(this, "Could not load webm\n" + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             } else {
-                double frp = MiscStatics.freeRamPerc();
-                long frb = MiscStatics.freeRamB();
-                String quality = "file_url";
-                int fsz = Integer.valueOf(data.getFirstChildText("file_size"));
-                //if (frp < 50)
-                MiscStatics.clearMem(this, fsz / (1024 * 1024), 50.0);
-                //image requires more than 80% of the total available ram
-                if (frb * 0.66 < fsz) WebImageView.clear();   //purge everything, we need it
-                //image would require more than 90% of the total available ram
-                if (frb-(8*1024*1024)<fsz) {    //try to leave 8 MiB for the rest of the app
+                int ocp = (int)(fsz*100/frb); //ocupie percent
+                Logger.getLogger("a621").warning("FileSize: " + fsz + " (" + (frb-(8*1024*1024)) + ", " + ocp + "%)");
+                if (frb-(8*1024*1024)<fsz || fsz>(memc/32.0)*1024*1024) {    //try to leave 8 MiB for the rest of the app
+                    //relating the memc part: bigger images seem to cause trouble in the decoder, causing moobs
                     quality = "sample_url"; //reduce quality if low on ram
                     quickToast("Had to load lower res");
                 }
@@ -611,7 +731,8 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
     @Override
     public void onBackPressed() {
-        if (layMore.getVisibility() != View.VISIBLE) {
+        if ((getResources().getConfiguration().orientation != getResources().getConfiguration().ORIENTATION_LANDSCAPE) &&
+            (layMore.getVisibility() != View.VISIBLE)) {
             if (postInfo.getVisibility() == View.VISIBLE) {
                 Animation bottomDown = AnimationUtils.loadAnimation(this, R.anim.bottom_down);
                 postInfo.startAnimation(bottomDown);

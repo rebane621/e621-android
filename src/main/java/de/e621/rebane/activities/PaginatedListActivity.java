@@ -36,11 +36,11 @@ public abstract class PaginatedListActivity extends DrawerWrapper
     XMLListAdapter results = null;
     LinearLayout pagebar;
     ImageView pageNext, pageLast, pageFirst;
-    int page=1;
-    String query = "";
+    public int page=1;
+    public String query = "";
     SwipeRefreshLayout swipeLayout;
     Menu menu = null;
-    int pagesize = 15;
+    public int pagesize = 15;
 
     String API_URI; //SET THIS IN YOUR SUBCLASS
     Boolean API_LOGIN; //SET THIS IN YOUR SUBCLASS
@@ -162,6 +162,7 @@ public abstract class PaginatedListActivity extends DrawerWrapper
 
     private boolean issearching = false;
     void searchPosts(String escapedQuery, int page) {
+        MiscStatics.clearMem(this);
         if (!MiscStatics.canRequest(this)) {
             if (!issearching) swipeLayout.setRefreshing(false);
             return;
@@ -237,7 +238,9 @@ public abstract class PaginatedListActivity extends DrawerWrapper
         switch (view.getId()) {
             case R.id.bnNext:
                 //Logger.getLogger("a621").info("next " + (page+1));
-                if ((page-1)*pagesize + results.getResultCount() < results.svNumPosts)
+                if (MiscStatics.isOrderRandomQueryURLescaped(query))
+                    searchPosts(query, 1);
+                else if ((page-1)*pagesize + results.getResultCount() < results.svNumPosts)
                     searchPosts(query, page+1);
                 break;
             case R.id.bnLast:

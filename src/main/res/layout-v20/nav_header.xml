@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- This version needs a layout_marginTop or the drawer header will "fall" under the ActionBar. Seems to work fine without on API 19
+Please report if you have a white bar above the drawer header and on what API version this might have to be moved to v21 or even v22 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="@dimen/nav_header_height"
               xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_marginTop="@dimen/abc_action_bar_default_height_material"
               android:background="@drawable/side_nav_bar"
               android:gravity="bottom"
               android:orientation="vertical"
