@@ -4,10 +4,7 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.method.PasswordTransformationMethod;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
-
-import java.util.logging.Logger;
 
 import de.e621.rebane.a621.R;
 

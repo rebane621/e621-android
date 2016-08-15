@@ -1,14 +1,11 @@
 package de.e621.rebane;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.widget.Toast;
 
-import java.net.URLEncoder;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLTask;
 

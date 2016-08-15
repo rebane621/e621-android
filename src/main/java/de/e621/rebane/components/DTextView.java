@@ -1,7 +1,6 @@
 package de.e621.rebane.components;
 
 import android.content.Context;
-import android.text.Html;
 import android.util.AttributeSet;
 import android.widget.TextView;
 

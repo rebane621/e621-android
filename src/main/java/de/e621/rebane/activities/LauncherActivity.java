@@ -1,24 +1,17 @@
 package de.e621.rebane.activities;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.Html;
-import android.view.View;
 import android.widget.TextView;
-
-import junit.runner.Version;
 
 import java.util.logging.Logger;
 
-import de.e621.rebane.HTMLformat;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLTask;
 

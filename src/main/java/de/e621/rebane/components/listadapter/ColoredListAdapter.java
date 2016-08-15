@@ -7,13 +7,10 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.e621.rebane.FilterManager;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class ColoredListAdapter extends ArrayAdapter<String> {
     private List<String> list = null;

@@ -6,9 +6,6 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
-import java.sql.SQLXML;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Logger;
 
 /* Diese Klasse sollte in der Hauptactivity instanziert werden: SQLiteDB sql = new SQLiteDB(this);

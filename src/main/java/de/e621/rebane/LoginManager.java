@@ -3,7 +3,6 @@ package de.e621.rebane;
 import android.app.Activity;
 import android.content.Context;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.net.URLDecoder;

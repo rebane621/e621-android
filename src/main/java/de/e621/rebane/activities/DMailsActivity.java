@@ -6,7 +6,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,7 +13,6 @@ import android.widget.Toast;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLDecoder;
 
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.listadapter.DMailListAdapter;

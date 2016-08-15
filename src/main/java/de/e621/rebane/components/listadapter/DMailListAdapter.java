@@ -1,18 +1,13 @@
 package de.e621.rebane.components.listadapter;
 
 import android.content.Context;
-import android.media.CamcorderProfile;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import java.util.List;
-import java.util.logging.Logger;
 
-import de.e621.rebane.HTMLformat;
 import de.e621.rebane.LoginManager;
-import de.e621.rebane.MiscStatics;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.xmlreader.XMLNode;

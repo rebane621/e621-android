@@ -7,12 +7,8 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.view.View;
 
-import de.e621.rebane.FilterManager;
-import de.e621.rebane.LoginManager;
-import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.listadapter.BlipListAdapter;
-import de.e621.rebane.components.listadapter.ForumListAdapter;
 import de.e621.rebane.xmlreader.XMLNode;
 
 public class BlipsActivity extends PaginatedListActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {

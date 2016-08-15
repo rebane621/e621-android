@@ -5,7 +5,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import de.e621.rebane.a621.R;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class TwoLinedViewHolder {
     TextView txtTitle, txtCreator;

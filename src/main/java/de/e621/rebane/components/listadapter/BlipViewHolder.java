@@ -2,8 +2,6 @@ package de.e621.rebane.components.listadapter;
 
 import android.content.Context;
 import android.content.Intent;
-import android.text.method.LinkMovementMethod;
-import android.text.method.MovementMethod;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;

@@ -1,6 +1,5 @@
 package de.e621.rebane;
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;

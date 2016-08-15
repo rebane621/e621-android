@@ -2,7 +2,6 @@ package de.e621.rebane.components.listadapter;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.Image;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
@@ -12,7 +11,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Filter;
 import java.util.logging.Logger;
 
 import de.e621.rebane.FilterManager;

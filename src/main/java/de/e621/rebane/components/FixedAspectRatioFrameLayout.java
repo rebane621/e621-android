@@ -6,8 +6,6 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import java.util.logging.Logger;
-
 import de.e621.rebane.a621.R;
 
 /**

@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 import de.e621.rebane.HTMLformat;
 import de.e621.rebane.LoginManager;
 import de.e621.rebane.MiscStatics;
-import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.DMailShowActivity;
 import de.e621.rebane.xmlreader.XMLNode;

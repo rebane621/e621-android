@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.DMailsActivity;
-import de.e621.rebane.activities.PostsActivity;
 import de.e621.rebane.xmlreader.XMLNode;
 import de.e621.rebane.xmlreader.XMLReader;
 
