@@ -24,10 +24,26 @@ import de.e621.rebane.xmlreader.XMLTask;
 
 public class LauncherActivity extends AppCompatActivity {
 
+    public static final String DATABASELASTUPDATE = "LastDayChecked4Updates";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_launcher);
+
+        SQLiteDB db = new SQLiteDB(this);
+        db.open();
+
+        Integer lastCheck=null, today=(int)(System.currentTimeMillis()/86400000); //convert to days
+        try {
+            lastCheck = Integer.parseInt(db.getValue(DATABASELASTUPDATE));
+        } catch (Exception e) {}//never checked
+        if (today.equals(lastCheck)) {//check up to once a day
+            Logger.getLogger("a621").info("Already checked for updates today");
+            goon();
+            return;
+        }
+        db.setValue(DATABASELASTUPDATE, today.toString());
 
         new XMLTask(getApplicationContext()) {
             @Override protected void onPostExecute(XMLNode result) {
@@ -64,31 +80,31 @@ public class LauncherActivity extends AppCompatActivity {
                 goon();
             }
 
-            private void goon() {
-                runOnUiThread(new Runnable() {
-                    @Override public void run() {
-                        SQLiteDB database = new SQLiteDB(LauncherActivity.this);
-                        database.open();
-                        String cname = database.getValue(SettingsActivity.SETTINGLAUNCHACTIVITY);
-                        database.close();
-                        if (cname != null) cname = this.getClass().getPackage().getName() + "." + cname + "Activity";
-                        //try { Thread.sleep(2000); } catch (Exception e) {}
-                        Intent intent = null;
-                        try {
-                            intent = new Intent(LauncherActivity.this, Class.forName(cname));
-                        } catch (Exception e) {
-                            Logger.getLogger("a621").info("No Activity for " + cname);
-                            intent = new Intent(LauncherActivity.this, PostsActivity.class);
-                        } finally {
-                            startActivity(intent);
-                        }
-                        finish();
-                    }
-                });
-            }
         }.execute("https://e621.net/forum/show.xml?id=191258");
     }
 
+    public void goon() {
+        runOnUiThread(new Runnable() {
+            @Override public void run() {
+                SQLiteDB database = new SQLiteDB(LauncherActivity.this);
+                database.open();
+                String cname = database.getValue(SettingsActivity.SETTINGLAUNCHACTIVITY);
+                database.close();
+                if (cname != null) cname = this.getClass().getPackage().getName() + "." + cname + "Activity";
+                //try { Thread.sleep(2000); } catch (Exception e) {}
+                Intent intent = null;
+                try {
+                    intent = new Intent(LauncherActivity.this, Class.forName(cname));
+                } catch (Exception e) {
+                    Logger.getLogger("a621").info("No Activity for " + cname);
+                    intent = new Intent(LauncherActivity.this, PostsActivity.class);
+                } finally {
+                    startActivity(intent);
+                }
+                finish();
+            }
+        });
+    }
     //@Override protected void onResume() {
     //    super.onResume();
     //}

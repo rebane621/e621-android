@@ -47,7 +47,12 @@ public class SettingsActivity extends DrawerWrapper
     @Override
     @SuppressLint("MissingSuperCall")
     protected void onCreate(Bundle savedInstanceState) {
-        activitylist.add("Posts"); activitylist.add("Forums"); activitylist.add("DMails");
+        activitylist.add("Posts");
+        activitylist.add("Pools");
+        activitylist.add("Sets");
+        activitylist.add("Blips");
+        activitylist.add("Forums");
+        activitylist.add("DMails");
 
         super.onCreate(R.layout.content_settings, savedInstanceState);
         //setContentView(R.layout.activity_settings);

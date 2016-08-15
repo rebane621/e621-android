@@ -15,7 +15,7 @@ import de.e621.rebane.components.listadapter.BlipListAdapter;
 import de.e621.rebane.components.listadapter.ForumListAdapter;
 import de.e621.rebane.xmlreader.XMLNode;
 
-public class BlipActivity extends PaginatedListActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
+public class BlipsActivity extends PaginatedListActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
 
     final static String BLIPQUERYPAGE = "a621 SearchManager Blip Page";
 

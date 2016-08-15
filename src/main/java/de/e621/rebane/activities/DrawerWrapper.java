@@ -30,8 +30,6 @@ import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.service.DMailService;
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLTask;
 
 public class DrawerWrapper extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -148,13 +146,14 @@ public class DrawerWrapper extends AppCompatActivity
 
     protected void updateDrawer() {
         int id = 0;
+        if (openActivity == null) return;
         if (openActivity.equals(PostsActivity.class) || openActivity.equals(PostShowActivity.class)) {
             id = R.id.nav_posts;
         } else if (openActivity.equals(PoolsActivity.class)) {
             id = R.id.nav_pools;
         } else if (openActivity.equals(SetsActivity.class)) {
             id = R.id.nav_sets;
-        } else if (openActivity.equals(BlipActivity.class)) {
+        } else if (openActivity.equals(BlipsActivity.class)) {
             id = R.id.nav_blips;
         } else if (openActivity.equals(ForumsActivity.class)) {
             id = R.id.nav_forum;
@@ -270,8 +269,8 @@ public class DrawerWrapper extends AppCompatActivity
         } else if (id == R.id.nav_sets && !openActivity.equals(SetsActivity.class)) {
             Intent intent = new Intent(getApplicationContext(), SetsActivity.class);
             this.startActivity(intent);
-        } else if (id == R.id.nav_blips && !openActivity.equals(BlipActivity.class)) {
-            Intent intent = new Intent(getApplicationContext(), BlipActivity.class);
+        } else if (id == R.id.nav_blips && !openActivity.equals(BlipsActivity.class)) {
+            Intent intent = new Intent(getApplicationContext(), BlipsActivity.class);
             this.startActivity(intent);
         } else if (id == R.id.nav_forum && !openActivity.equals(ForumsActivity.class)) {
             Intent intent = new Intent(getApplicationContext(), ForumsActivity.class);

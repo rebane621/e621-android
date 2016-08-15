@@ -60,7 +60,7 @@
             android:launchMode="singleTop">
         </activity>
         <activity
-            android:name="de.e621.rebane.activities.BlipActivity"
+            android:name="de.e621.rebane.activities.BlipsActivity"
             android:label="@string/title_blips"
             android:launchMode="singleTop">
         </activity>

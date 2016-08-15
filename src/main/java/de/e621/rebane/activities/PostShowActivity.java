@@ -541,7 +541,9 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         desc.setDText(data.getFirstChildText("description"));
 
         ActionBar ab = getSupportActionBar();
-        ab.setTitle("Post #" + data.getFirstChildText("id"));
+        ab.setTitle(((getIntent().getIntExtra(EXTRAPOOLID,0)|getIntent().getIntExtra(EXTRASETID,0)) != 0) ?
+                "Post "+ (getIntent().getIntExtra(EXTRASEARCHOFFSET,0)+1) +", #" + data.getFirstChildText("id") :
+                "Post #" + data.getFirstChildText("id"));
         ab.setSubtitle("▲ " + data.getFirstChildText("score") + " ♥ " + data.getFirstChildText("fav_count") + " " + data.getFirstChildText("rating").toUpperCase());
 
         //comment post loader
