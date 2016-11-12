@@ -4,11 +4,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import java.util.List;
 
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.PostsActivity;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class PostListAdapter extends XMLListAdapter {
     private String quality;

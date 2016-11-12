@@ -6,6 +6,8 @@ import android.text.Html;
 import android.view.View;
 import android.widget.TextView;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import java.util.logging.Logger;
 
 import de.e621.rebane.HTMLformat;
@@ -13,7 +15,6 @@ import de.e621.rebane.LoginManager;
 import de.e621.rebane.MiscStatics;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.DMailShowActivity;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class DMailViewHolder {
     TextView txtTitle, txtCreator;
@@ -40,15 +41,15 @@ public class DMailViewHolder {
         });
         Context cont = convertView.getContext();
 
-        Integer from = Integer.parseInt(data.getFirstChildText("from-id")),
-                to = Integer.parseInt(data.getFirstChildText("to-id"));
+        Integer from = Integer.parseInt(data.getFirstChildContent("from-id").orElse("")),
+                to = Integer.parseInt(data.getFirstChildContent("to-id").orElse(""));
         Integer dir = ((lm.getUserid() == null || from.equals(to)) ? 0 : (lm.getUserid().compareTo(to)!=0 ? 1 : -1));
         int colorcode = (dir < 0 ? cont.getResources().getColor(R.color.preview_green) :
                 (dir > 0 ? cont.getResources().getColor(R.color.preview_red) :
                         cont.getResources().getColor(R.color.text_neutral)));
         Logger.getLogger("a621").info(String.format("f%d - t%d - u%d > %d", from, to, lm.getUserid(), dir));
 
-        txtTitle.setText(Html.fromHtml(HTMLformat.colored((Boolean.parseBoolean(data.getFirstChildText("has-seen"))?"":"* ")+data.getFirstChildText("title"), colorcode)));
-        txtCreator.setText(Html.fromHtml(from + " > " + to + " - " + MiscStatics.readableTime(data.getFirstChildText("created-at"))));
+        txtTitle.setText(Html.fromHtml(HTMLformat.colored((Boolean.parseBoolean(data.getFirstChildContent("has-seen").orElse(""))?"":"* ")+data.getFirstChildContent("title").orElse(""), colorcode)));
+        txtCreator.setText(Html.fromHtml(from + " > " + to + " - " + MiscStatics.readableTime(data.getFirstChildContent("created-at").orElse(""))));
     }
 }

@@ -5,10 +5,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import de.e621.rebane.xmlreader.XMLNode;
 
 public abstract class XMLListAdapter extends ArrayAdapter<XMLNode> {
     List<XMLNode> list = null;

@@ -7,6 +7,9 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.itwookie.XMLreader.XMLNode;
+import com.itwookie.XMLreader.XMLTask;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,8 +22,6 @@ import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.PostShowActivity;
 import de.e621.rebane.components.DTextView;
 import de.e621.rebane.components.WebImageView;
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLTask;
 
 /** blips do not have as detailed information, so I duped the commentViewHoler to match */
 public class BlipViewHolder {
@@ -77,26 +78,26 @@ public class BlipViewHolder {
         avatar.setTag(ptag);
         final View elem = element;
         
-        final String UserID = data.getFirstChildText("user_id"); //blips are working with "user" instead of "creator"
+        final String UserID = data.getFirstChildContent("user_id").orElse(""); //blips are working with "user" instead of "creator"
         AuthorData author = (authorData.containsKey(UserID) ? authorData.get(UserID) : null);
         if (author == null && !requestRunningFor.contains(UserID) && MiscStatics.canRequest(context)) {
-            author = new AuthorData(data.getFirstChildText("user"), Integer.valueOf(UserID), 0, -100);
+            author = new AuthorData(data.getFirstChildContent("user").orElse(""), Integer.valueOf(UserID), 0, -100);
             authorData.put(UserID, author);
             if (fancyComments) {
                 if (!MiscStatics.canRequest(context)) return;
                 requestRunningFor.add(UserID);
-                (new XMLTask(context) {
+                (new XMLTask() {
                     @Override protected void onPostExecute(XMLNode result) {
                         if (result == null || !"users".equals(result.getType()) || result.getChildCount()<1) {
                             Logger.getLogger("a621").info("Got Problems with UserInformation " + (result==null?"=NUL": result.getChildCount()+" "+result.getType()+"@\n"+result.toString()));
                             return;
                         }
-                        XMLNode workwith = result.children().get(0);
-                        String id = workwith.getAttribute("id");
+                        XMLNode workwith = result.getChildren().get(0);
+                        String id = workwith.getAttribute("id").orElse("");
                         AuthorData res = authorData.get(id);//new AuthorData(workwith.getAttribute("name"), Integer.valueOf(id), 0, Integer.valueOf(workwith.getAttribute("level")));
-                        res.setLevel(Integer.valueOf(workwith.getAttribute("level")));
-                        if (workwith.attributes().contains("avatar_id") && !workwith.getAttribute("avatar_id").isEmpty())
-                            res.setIid(Integer.valueOf(workwith.getAttribute("avatar_id")));
+                        res.setLevel(Integer.valueOf(workwith.getAttribute("level").orElse("")));
+                        if (workwith.attributes().contains("avatar_id") && !workwith.getAttribute("avatar_id").isPresent())
+                            res.setIid(Integer.valueOf(workwith.getAttribute("avatar_id").orElse("")));
                         try {
                             fillAuthorData(res);
                             authorData.put(id, res);
@@ -133,7 +134,7 @@ public class BlipViewHolder {
 
         //created and score functions not available for blips
 
-        txtComment.setDText(data.getFirstChildText("body"));
+        txtComment.setDText(data.getFirstChildContent("body").orElse(""));
 
     }
 
@@ -150,7 +151,7 @@ public class BlipViewHolder {
                     if (MiscStatics.canRequest(context)) {
                         avatar.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_loading));
                         author.setImageURL("");//only load once
-                        new XMLTask(context) {
+                        new XMLTask() {
                             @Override protected void onPostExecute(XMLNode result) {
                                 AuthorData putto = authorData.get(aid);
                                 if (result == null) {
@@ -160,7 +161,7 @@ public class BlipViewHolder {
                                     avatar.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_blocked));
                                     avatar.postInvalidate();
                                 } else {
-                                    putto.setImageURL(result.getFirstChildText("preview_url"));
+                                    putto.setImageURL(result.getFirstChildContent("preview_url").orElse(""));
                                     avatar.setImageUrl("avatar" + aid, putto.getImageURL(), false);
                                     avatar.postInvalidate();
                                 }

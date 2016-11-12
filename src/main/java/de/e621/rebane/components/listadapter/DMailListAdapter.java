@@ -5,12 +5,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import java.util.List;
 
 import de.e621.rebane.LoginManager;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class DMailListAdapter extends XMLListAdapter {
 
@@ -24,7 +25,7 @@ public class DMailListAdapter extends XMLListAdapter {
     }
 
     public View getView(final int position, View convertView, ViewGroup parent) {
-        DMailViewHolder holder = new DMailViewHolder(Integer.parseInt(list.get(position).getFirstChildText("id")));
+        DMailViewHolder holder = new DMailViewHolder(Integer.parseInt(list.get(position).getFirstChildContent("id").orElse("")));
 
         LayoutInflater inflator = LayoutInflater.from(parent.getContext());
         convertView = inflator.inflate(R.layout.twolined_listentry, parent, false);
