@@ -7,6 +7,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
+import com.itwookie.XMLreader.XMLNode;
+import com.itwookie.XMLreader.XMLReader;
+
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -16,8 +19,6 @@ import java.util.logging.Logger;
 
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.DMailsActivity;
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLReader;
 
 public class DMailService extends IntentService {
     private static final long delay = 1000*60*5; //delay between checks
@@ -101,10 +102,10 @@ public class DMailService extends IntentService {
                     break;
                 }
                 //Logger.getLogger("a621").info ("DMail: " + msg.toString());
-                Boolean seen = Boolean.parseBoolean(msg.getFirstChildText("has-seen"));
+                Boolean seen = Boolean.parseBoolean(msg.getFirstChildContent("has-seen").orElse(""));
                 if (!seen) {
                     cnt++;
-                    cont.append(msg.getFirstChildText("title") + " \n");
+                    cont.append(msg.getFirstChildContent("title").orElse("") + " \n");
                 }
             }
             if (cnt > 0) {
