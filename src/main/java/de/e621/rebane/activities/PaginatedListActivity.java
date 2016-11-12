@@ -18,6 +18,9 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.itwookie.XMLreader.XMLNode;
+import com.itwookie.XMLreader.XMLTask;
+
 import java.net.URLEncoder;
 import java.util.logging.Logger;
 
@@ -25,8 +28,6 @@ import de.e621.rebane.MiscStatics;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.components.listadapter.XMLListAdapter;
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLTask;
 
 public abstract class PaginatedListActivity extends DrawerWrapper
         implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
@@ -182,7 +183,7 @@ public abstract class PaginatedListActivity extends DrawerWrapper
         final int _page = page;
         final String _query = escapedQuery;
 
-        (new XMLTask(this) {
+        (new XMLTask() {
             @Override
             protected void onPostExecute(XMLNode result) {
 

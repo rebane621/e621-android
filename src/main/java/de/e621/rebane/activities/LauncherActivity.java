@@ -8,12 +8,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.widget.TextView;
 
+import com.itwookie.XMLreader.XMLNode;
+import com.itwookie.XMLreader.XMLTask;
+
 import java.util.logging.Logger;
 
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLTask;
 
 public class LauncherActivity extends AppCompatActivity {
 
@@ -38,10 +39,10 @@ public class LauncherActivity extends AppCompatActivity {
         }
         db.setValue(DATABASELASTUPDATE, today.toString());
 
-        new XMLTask(getApplicationContext()) {
+        new XMLTask() {
             @Override protected void onPostExecute(XMLNode result) {
                 if (result==null || result.getChildCount()==0) { goon(); return; }
-                String body = result.getFirstChildText("body");
+                String body = result.getFirstChildContent("body").orElse("");
                 int pos = body.indexOf("(Current version ");
                 if (pos<0) { goon(); return; }
                 int start = pos+17; //17=len("(Current version ")

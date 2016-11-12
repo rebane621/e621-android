@@ -7,9 +7,10 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.view.View;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.listadapter.ForumListAdapter;
-import de.e621.rebane.xmlreader.XMLNode;
 
 
 /** with what little information is returned by the forum API I won't continue that for now */
@@ -58,7 +59,7 @@ public class ForumsActivity extends PaginatedListActivity implements SwipeRefres
     }
 
     @Override void onSearchResult(XMLNode result, String query, int page) {
-        results = new ForumListAdapter(getApplicationContext(), R.id.lblTitle, result.children());
+        results = new ForumListAdapter(getApplicationContext(), R.id.lblTitle, result.getChildren());
         //results.svNumPosts = (result.attributes().contains("count") ? Integer.valueOf(result.getAttribute("count")) : 0); //this value is not provided
         this.page = page;
 

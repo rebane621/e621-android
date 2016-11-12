@@ -40,6 +40,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.itwookie.XMLreader.XMLNode;
+import com.itwookie.XMLreader.XMLTask;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -70,8 +73,6 @@ import de.e621.rebane.components.TouchImageView;
 import de.e621.rebane.components.WebImageView;
 import de.e621.rebane.components.listadapter.ColoredListAdapter;
 import de.e621.rebane.components.listadapter.CommentListAdapter;
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLTask;
 
 public class PostShowActivity extends AppCompatActivity implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -162,17 +163,17 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 Logger.getLogger("a621").info("Requesting " + url);
                 if (!MiscStatics.canRequest(PostShowActivity.this) || progressBar.getVisibility()==View.VISIBLE) return;
                 progressBar.setVisibility(View.VISIBLE);
-                new XMLTask(PostShowActivity.this) {
+                new XMLTask() {
                     @Override protected void onPostExecute(XMLNode result) {
                         progressBar.setVisibility(View.GONE);
                         if (!result.getType().equals("posts")){ //try to return the first "posts" element found
-                            XMLNode[] wat = result.getElementsByTagName("posts");
-                            if (wat.length>0) result = wat[0];
+                            List<XMLNode> wat = result.getElementsByTagName("posts");
+                            if (wat.size()>0) result = wat.get(0);
                         }
                         if (result == null || !result.getType().equals("posts") || result.getChildCount()<=index) {
                             quickToast("No results");
                         } else {
-                            XMLNode child0 = result.getChildren()[index];
+                            XMLNode child0 = result.getChildren().get(index);
                             Intent prev = new Intent(PostShowActivity.this, PostShowActivity.class);
                             SQLiteDB database = new SQLiteDB(PostShowActivity.this); database.open(); //required for blacklist string
                             if (new FilterManager(PostShowActivity.this, database.getStringArray(SettingsActivity.SETTINGBLACKLIST)).isBlacklisted(child0))
@@ -259,10 +260,10 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         //load notes (needs to be done after the image loaded
         imgImage.setWebImageLoadedListener(new WebImageView.WebImageLoadedListener() {
             @Override public void onImageLoaded() {
-                if (!Boolean.parseBoolean(data.getFirstChildText("has_notes"))) return;
+                if (!Boolean.parseBoolean(data.getFirstChildContent("has_notes").orElse("false"))) return;
                 if (!MiscStatics.canRequest(PostShowActivity.this)) return;
                 if (notes == null && imgImage.getVisibility()==View.VISIBLE) {
-                    (new XMLTask(PostShowActivity.this) {
+                    (new XMLTask() {
                         @Override
                         protected void onPostExecute(XMLNode result) {
 
@@ -278,8 +279,8 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
                             AbsoluteLayout lay = (AbsoluteLayout) findViewById(R.id.layNotesOverlay);
                             Drawable b = imgImage.getDrawable();
-                            int imgW = Integer.parseInt(data.getFirstChildText("width"));   //image size
-                            int imgH = Integer.parseInt(data.getFirstChildText("height"));  //image size
+                            int imgW = Integer.parseInt(data.getFirstChildContent("width").orElse(""));   //image size
+                            int imgH = Integer.parseInt(data.getFirstChildContent("height").orElse(""));  //image size
 
                             double r1 = (double)imgH/(double)imgW, r2 = (double)lay.getHeight()/(double)lay.getWidth(), scale;
                             Logger.getLogger("a621").info(imgH + "/" + imgW + "=" + r1 + " - " + lay.getHeight() + "/" + lay.getWidth() + "=" + r2);
@@ -298,19 +299,19 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                             float ciY = (imgH/2);       //image middle
 
                             for (XMLNode note : result.getChildren()) {
-                                if (!Boolean.parseBoolean(note.getFirstChildText("is_active"))) continue;
+                                if (!Boolean.parseBoolean(note.getFirstChildContent("is_active").orElse(""))) continue;
 
                                 newnote = new TextView(PostShowActivity.this);
 
-                                int left = (int)(cX + ( Integer.parseInt(note.getFirstChildText("x")) - ciX ) * scale);
-                                int top = (int)(cY + ( Integer.parseInt(note.getFirstChildText("y")) - ciY ) * scale);
-                                int width = (int)(Integer.parseInt(note.getFirstChildText("width")) * scale);
-                                int height = (int)(Integer.parseInt(note.getFirstChildText("height")) * scale);
+                                int left = (int)(cX + ( Integer.parseInt(note.getFirstChildContent("x").orElse("")) - ciX ) * scale);
+                                int top = (int)(cY + ( Integer.parseInt(note.getFirstChildContent("y").orElse("")) - ciY ) * scale);
+                                int width = (int)(Integer.parseInt(note.getFirstChildContent("width").orElse("")) * scale);
+                                int height = (int)(Integer.parseInt(note.getFirstChildContent("height").orElse("")) * scale);
 
                                 lapa = new AbsoluteLayout.LayoutParams(width, height, left, top);
                                 newnote.setLayoutParams(lapa);
                                 newnote.setBackgroundColor(getResources().getColor(R.color.noteBackground));
-                                newnote.setText(note.getFirstChildText("body"));
+                                newnote.setText(note.getFirstChildContent("body").orElse(""));
 
                                 newnote.setOnClickListener(PostShowActivity.this.NoteClickListener);
 
@@ -318,7 +319,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                                 notes.add(newnote);
                             }
                         }
-                    }).execute( baseURL +"note/index.xml?post_id=" + data.getFirstChildText("id") );
+                    }).execute( baseURL +"note/index.xml?post_id=" + data.getFirstChildContent("id").orElse("") );
                 }
             }
         });
@@ -382,7 +383,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 finish();
             } else {
                 if (!MiscStatics.canRequest(PostShowActivity.this)) return;
-                new XMLTask(this) {
+                new XMLTask() {
                     @Override protected void onPostExecute(XMLNode result) {
                         if (result == null || !result.getType().equals("post")) {
                             quickToast("Could not load Post " + postid);
@@ -416,7 +417,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         if (data==null) {
             return; //probably given a postID instead
         } else {
-            if (Boolean.valueOf(data.getAttribute("Blacklisted"))) {
+            if (Boolean.valueOf(data.getAttribute("Blacklisted").orElse(""))) {
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -458,20 +459,20 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
         double frp = MiscStatics.freeRamPerc();
         long frb = MiscStatics.freeRamB();
         String quality = "file_url";
-        int fsz = Integer.valueOf(data.getFirstChildText("file_size"));
+        int fsz = Integer.valueOf(data.getFirstChildContent("file_size").orElse(""));
         if (frb * 0.66 < fsz || frb < (memc/2.0)*1024*1024) WebImageView.clear();   //purge everything while trying to get at least 15 MiB RAM for the file + 8 for the rest
         else MiscStatics.clearMem(this, fsz / (1024 * 1024), 50.0);
 
-        String type = data.getFirstChildText("status");
+        String type = data.getFirstChildContent("status").orElse("");
         if (deleted = type.equalsIgnoreCase("deleted")) { //active, flagged, pending, deleted
             imgImage.setVisibility(View.VISIBLE);
             imgImage.setPlaceholderImage(getResources().getDrawable(R.mipmap.thumb_deleted));
         } else {
-            type = data.getFirstChildText("file_ext");
+            type = data.getFirstChildContent("file_ext").orElse("");
             if (type.equalsIgnoreCase("swf")) {
                 swfImage.setVisibility(View.VISIBLE);
                 WebImageView.clear();
-                String innerHTML = swfhtml.replaceAll("@@@URL@@@", data.getFirstChildText("file_url"));
+                String innerHTML = swfhtml.replaceAll("@@@URL@@@", data.getFirstChildContent("file_url").orElse(""));
                 Logger.getLogger("a621").info("Inner HTML: " + innerHTML);
                 swfImage.loadData(innerHTML, "text/html", "utf-8");
                 //swfImage.loadUrl(data.getFirstChildText("file_url"));
@@ -485,7 +486,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                     //    }
                     //}.execute();
                     WebImageView.clear();
-                    webmImage.setVideoURI(Uri.parse(data.getFirstChildText("file_url")));
+                    webmImage.setVideoURI(Uri.parse(data.getFirstChildContent("file_url").orElse("")));
                     //webmImage.start();
                     MediaController mct = new MediaController(PostShowActivity.this);
                     webmImage.setMediaController(mct);
@@ -503,10 +504,10 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
                 imgImage.setVisibility(View.VISIBLE);
                 imgImage.setPlaceholderImage(getResources().getDrawable(R.mipmap.thumb_loading));
-                imgImage.setImageUrl(data.getFirstChildText("md5"), data.getFirstChildText(quality), true);
+                imgImage.setImageUrl(data.getFirstChildContent("md5").orElse(""), data.getFirstChildContent(quality).orElse(""), true);
             }
         }
-        lstTags.setAdapter(new ArrayAdapter<String>(this, R.layout.singleline_listentry, data.getFirstChildText("tags").split(" ")));
+        lstTags.setAdapter(new ArrayAdapter<String>(this, R.layout.singleline_listentry, data.getFirstChildContent("tags").orElse("").split(" ")));
         lstTags.invalidate();
         lstTags.requestLayout();
         lstTags.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -522,33 +523,33 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
         //try {
         TextView stats = (TextView) findViewById(R.id.txtStats1);
-        String rating = data.getFirstChildText("rating").toUpperCase();
-        int score = Integer.valueOf(data.getFirstChildText("score"));
-        String url = data.getFirstChildText("source");
+        String rating = data.getFirstChildContent("rating").orElse("").toUpperCase();
+        int score = Integer.valueOf(data.getFirstChildContent("score").orElse(""));
+        String url = data.getFirstChildContent("source").orElse("");
         String statstext = "Source: " + (deleted || url==null || url.isEmpty() ? " - " : HTMLformat.link(url, url)) +
-                "<br>Uploaded " + HTMLformat.colored(MiscStatics.readableTime(data.getFirstChildText("created_at")), Color.WHITE) + " by " + HTMLformat.colored(data.getFirstChildText("author"), Color.WHITE) +
+                "<br>Uploaded " + HTMLformat.colored(MiscStatics.readableTime(data.getFirstChildContent("created_at").orElse("")), Color.WHITE) + " by " + HTMLformat.colored(data.getFirstChildContent("author").orElse(""), Color.WHITE) +
                 "<br>Rating: " + HTMLformat.bold( HTMLformat.colored(rating, getResources().getColor("E".equals(rating) ? R.color.preview_red : ( "Q".equals(rating) ? R.color.preview_yellow : R.color.preview_green) )) ) +
                 "<br>Score: " + HTMLformat.colored(String.valueOf(score), score>0 ? getResources().getColor(R.color.preview_green) : ( score<0 ? getResources().getColor(R.color.preview_red) :Color.WHITE)) +
-                "<br>Favourites: " + HTMLformat.colored(data.getFirstChildText("fav_count"), Color.WHITE) +
-                "<br>ID: " + HTMLformat.colored(data.getFirstChildText("id"), Color.WHITE) +
-                "<br>Size: " + (deleted ? "??? (? kiB)" : HTMLformat.colored(data.getFirstChildText("width") + "x" + data.getFirstChildText("height") + " (" + Float.valueOf(data.getFirstChildText("file_size")) / 1024 + "kiB)", Color.WHITE) );
+                "<br>Favourites: " + HTMLformat.colored(data.getFirstChildContent("fav_count").orElse(""), Color.WHITE) +
+                "<br>ID: " + HTMLformat.colored(data.getFirstChildContent("id").orElse(""), Color.WHITE) +
+                "<br>Size: " + (deleted ? "??? (? kiB)" : HTMLformat.colored(data.getFirstChildContent("width").orElse("") + "x" + data.getFirstChildContent("height").orElse("") + " (" + Float.valueOf(data.getFirstChildContent("file_size").orElse("")) / 1024 + "kiB)", Color.WHITE) );
         stats.setText(Html.fromHtml(statstext));
         stats.requestLayout();
         //} catch(Exception e) { }    //just in case ;)
 
         DTextView desc = (DTextView) findViewById(R.id.txtDescription);
-        desc.setDText(data.getFirstChildText("description"));
+        desc.setDText(data.getFirstChildContent("description").orElse(""));
 
         ActionBar ab = getSupportActionBar();
         ab.setTitle(((getIntent().getIntExtra(EXTRAPOOLID,0)|getIntent().getIntExtra(EXTRASETID,0)) != 0) ?
-                "Post "+ (getIntent().getIntExtra(EXTRASEARCHOFFSET,0)+1) +", #" + data.getFirstChildText("id") :
-                "Post #" + data.getFirstChildText("id"));
-        ab.setSubtitle("▲ " + data.getFirstChildText("score") + " ♥ " + data.getFirstChildText("fav_count") + " " + data.getFirstChildText("rating").toUpperCase());
+                "Post "+ (getIntent().getIntExtra(EXTRASEARCHOFFSET,0)+1) +", #" + data.getFirstChildContent("id").orElse("") :
+                "Post #" + data.getFirstChildContent("id").orElse(""));
+        ab.setSubtitle("▲ " + data.getFirstChildContent("score").orElse("") + " ♥ " + data.getFirstChildContent("fav_count").orElse("") + " " + data.getFirstChildContent("rating").orElse("").toUpperCase());
 
         //comment post loader
-        if (Boolean.parseBoolean(data.getFirstChildText("has_comments"))) {
+        if (Boolean.parseBoolean(data.getFirstChildContent("has_comments").orElse(""))) {
             if (MiscStatics.canRequest(PostShowActivity.this)) {
-                (new XMLTask(this) {
+                (new XMLTask() {
                     @Override
                     protected void onPostExecute(XMLNode result) {
 
@@ -559,7 +560,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                         //if (result.getChildCount() <= 0) { quickToast("No results found..."); return; }
 
                         List<XMLNode> revers = new LinkedList<XMLNode>();
-                        for (XMLNode n : result.children()) revers.add(0, n);
+                        for (XMLNode n : result.getChildren()) revers.add(0, n);
 
                         results = new CommentListAdapter(getApplicationContext(), R.id.txtComment, revers, baseURL, blacklist, postLoadUserdata);
                         results.svNumPosts = result.getChildCount();
@@ -575,13 +576,13 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                                 ab.setSubtitle(results.getResultCount() + " Comments");
                         }
                     }
-                }).execute(baseURL + "comment/index.xml?post_id=" + data.getFirstChildText("id"));
+                }).execute(baseURL + "comment/index.xml?post_id=" + data.getFirstChildContent("id").orElse(""));
             }
         }
 
         //tag type loader
         if (MiscStatics.canRequest(PostShowActivity.this)) {
-            (new XMLTask(this) {
+            (new XMLTask() {
                 @Override
                 protected void onPostExecute(XMLNode result) {
 
@@ -592,11 +593,11 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                     //if (result.getChildCount() <= 0) { quickToast("No results found..."); return; }
 
                     List<XMLNode> sorted = new LinkedList<XMLNode>();
-                    sorted.addAll(result.children());
+                    sorted.addAll(result.getChildren());
                     Collections.sort(sorted, new Comparator<XMLNode>() {
                         @Override public int compare(XMLNode t0, XMLNode t1) {
-                            int comp0 = t0.getFirstChildText("type").compareTo(t1.getFirstChildText("type")) * -1; //reverse sort those to get general tags to the bottom
-                            return (comp0 != 0 ? comp0 : t0.getFirstChildText("name").compareTo(t1.getFirstChildText("name")));
+                            int comp0 = t0.getFirstChildContent("type").orElse("").compareTo(t1.getFirstChildContent("type").orElse("")) * -1; //reverse sort those to get general tags to the bottom
+                            return (comp0 != 0 ? comp0 : t0.getFirstChildContent("name").orElse("").compareTo(t1.getFirstChildContent("name").orElse("")));
                         }
                     });
 
@@ -611,18 +612,18 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
 
                     ColoredListAdapter cla = new ColoredListAdapter(PostShowActivity.this, R.id.singleline_listentry);
                     for (XMLNode n : sorted) {
-                        cla.add(n.getFirstChildText("name"), colors[Integer.parseInt(n.getFirstChildText("type"))]);
+                        cla.add(n.getFirstChildContent("name").orElse(""), colors[Integer.parseInt(n.getFirstChildContent("type").orElse(""))]);
                     }
 
                     lstTags.setAdapter(cla);
                 }
-            }).execute(baseURL + "post/tags.xml?id=" + data.getFirstChildText("id"));
+            }).execute(baseURL + "post/tags.xml?id=" + data.getFirstChildContent("id").orElse(""));
         }
 
         //favorite check postload
         if (lm.isLoggedIn()) {
             if (MiscStatics.canRequest(PostShowActivity.this)) {
-                (new XMLTask(this) {
+                (new XMLTask() {
                     @Override protected void onPostExecute(XMLNode result) {
                         if (result != null && result.getType().equals("posts")) {
                             int faved = result.getChildCount();
@@ -631,7 +632,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                                 ((ImageView) findViewById(R.id.bnFav)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_fav_on));
                         }
                     }
-                }).execute(baseURL + "post/index.xml?tags=" + URLEncoder.encode("id:" + data.getFirstChildText("id") + " fav:" + lm.getUsername()));
+                }).execute(baseURL + "post/index.xml?tags=" + URLEncoder.encode("id:" + data.getFirstChildContent("id").orElse("") + " fav:" + lm.getUsername()));
             }
         } else {
             //Logger.getLogger("a621").info("Not logged in");
@@ -655,7 +656,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 postInfo.setVisibility(View.VISIBLE);
 
                 ab.setTitle("Post Data");
-                ab.setSubtitle("Post #" + data.getFirstChildText("id") + ", " + data.getFirstChildText("status"));
+                ab.setSubtitle("Post #" + data.getFirstChildContent("id").orElse("") + ", " + data.getFirstChildContent("status").orElse(""));
 
                 break;
             case (R.id.bnComments):
@@ -673,7 +674,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 break;
             case (R.id.bnFav):
                 postData = new HashMap<String, String>();
-                postData.put("id", data.getFirstChildText("id"));
+                postData.put("id", data.getFirstChildContent("id").orElse(""));
                 final int action = ((data.attributes().contains("faved") && !data.getAttribute("faved").equals("0")) ? ActionRequest.POST_UNFAVOURITE : ActionRequest.POST_FAVOURITE);
                 Logger.getLogger("a621").info(action == ActionRequest.POST_FAVOURITE ? "Adding post to favorites" : "Removing psot from favorites");
                 new ActionRequest(this, lm.getLogin(), action, postData) {
@@ -691,12 +692,12 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 break;
             case (R.id.bnRateUp):
                 postData = new HashMap<String, String>();
-                postData.put("id", data.getFirstChildText("id"));
+                postData.put("id", data.getFirstChildContent("id").orElse(""));
                 postData.put("score", "1");
                 new ActionRequest(this, lm.getLogin(), ActionRequest.POST_VOTE_UP, postData) {
                     @Override public void onSuccess(XMLNode result) {
                         Integer c;
-                        try { c = Integer.parseInt(result.getFirstChildText("change")); }
+                        try { c = Integer.parseInt(result.getFirstChildContent("change").orElse("")); }
                         catch (Exception e) { c = 0; }
                         if (c>0) {
                             ((ImageView) findViewById(R.id.bnRateUp)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_up_on));
@@ -710,12 +711,12 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 break;
             case (R.id.bnRateDown):
                 postData = new HashMap<String, String>();
-                postData.put("id", data.getFirstChildText("id"));
+                postData.put("id", data.getFirstChildContent("id").orElse(""));
                 postData.put("score", "-1");
                 new ActionRequest(this, lm.getLogin(), ActionRequest.POST_VOTE_DOWN, postData) {
                     @Override public void onSuccess(XMLNode result) {
                         Integer c;
-                        try { c = Integer.parseInt(result.getFirstChildText("change")); }
+                        try { c = Integer.parseInt(result.getFirstChildContent("change").orElse("")); }
                         catch (Exception e) { c = 0; }
                         if (c<0) {
                             ((ImageView) findViewById(R.id.bnRateDown)).setImageDrawable(getResources().getDrawable(R.mipmap.ic_img_rate_down_on));
@@ -750,8 +751,8 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
             layMore.setVisibility(View.VISIBLE);
 
             ActionBar ab = getSupportActionBar();
-            ab.setTitle("Post #" + data.getFirstChildText("id"));
-            ab.setSubtitle("▲ " + data.getFirstChildText("score") + " ♥ " + data.getFirstChildText("fav_count") + " " + data.getFirstChildText("rating").toUpperCase());
+            ab.setTitle("Post #" + data.getFirstChildContent("id").orElse(""));
+            ab.setSubtitle("▲ " + data.getFirstChildContent("score").orElse("0") + " ♥ " + data.getFirstChildContent("fav_count").orElse("0") + " " + data.getFirstChildContent("rating").orElse("").toUpperCase());
         } else
             super.onBackPressed();
     }
@@ -885,7 +886,7 @@ public class PostShowActivity extends AppCompatActivity implements View.OnClickL
                 if (saveLoc == null) {
                     quickToast("Invalid Directory!");
                 }
-                String imgPath = PostShowActivity.this.data.getFirstChildText("file_url");
+                String imgPath = PostShowActivity.this.data.getFirstChildContent("file_url").orElse("");
                 try {
                     new PostDownloader(new File(saveLoc, imgPath.substring(imgPath.lastIndexOf('/'))), imgPath).execute();
                 } catch (Exception e) {

@@ -13,11 +13,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import java.net.URLDecoder;
 
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.listadapter.CoverListAdapter;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class PoolsActivity extends PaginatedListActivity
         implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
@@ -59,7 +60,7 @@ public class PoolsActivity extends PaginatedListActivity
         openDB();
         String quality = database.getValue(SettingsActivity.SETTINGPREVIEWQUALITY); //i would really like to display thumbnails, a bit like a bookshelf
 
-        results = new CoverListAdapter(this, R.id.txtMid, result.children(), quality, "pool");
+        results = new CoverListAdapter(this, R.id.txtMid, result.getChildren(), quality, "pool");
         //results.svNumPosts = (result.attributes().contains("count") ? Integer.valueOf(result.getAttribute("count")) : 0); // not returned by API
         PoolsActivity.this.query = query; PoolsActivity.this.page = page;
 
