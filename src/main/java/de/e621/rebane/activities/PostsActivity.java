@@ -13,11 +13,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import java.net.URLDecoder;
 
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.listadapter.PostListAdapter;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class PostsActivity extends PaginatedListActivity
         implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
@@ -76,8 +77,8 @@ public class PostsActivity extends PaginatedListActivity
         openDB();
         String quality = database.getValue(SettingsActivity.SETTINGPREVIEWQUALITY);
 
-        results = new PostListAdapter(this, R.id.txtMid, blacklist.proxyBlacklist(result.children()), quality);
-        results.svNumPosts = (result.attributes().contains("count") ? Integer.valueOf(result.getAttribute("count")) : 0);
+        results = new PostListAdapter(this, R.id.txtMid, blacklist.proxyBlacklist(result.getChildren()), quality);
+        results.svNumPosts = (result.attributes().contains("count") ? Integer.valueOf(result.getAttribute("count").orElse("")) : 0);
         PostsActivity.this.query = query; PostsActivity.this.page = page;
 
         ActionBar ab = getSupportActionBar();

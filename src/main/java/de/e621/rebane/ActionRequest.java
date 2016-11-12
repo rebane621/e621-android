@@ -3,11 +3,11 @@ package de.e621.rebane;
 import android.content.Context;
 import android.widget.Toast;
 
+import com.itwookie.XMLreader.XMLNode;
+import com.itwookie.XMLreader.XMLTask;
+
 import java.util.Map;
 import java.util.logging.Logger;
-
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLTask;
 
 public abstract class ActionRequest extends XMLTask {
 
@@ -43,7 +43,7 @@ public abstract class ActionRequest extends XMLTask {
     private Context context;
     /** leave loginAppendix null if no login is required */
     public ActionRequest(Context context, String loginAppendix, int RequestType, Map<String, String> data) {
-        super(context);
+        //super(context);
         this.context = context;
         login = loginAppendix;
         requestID = RequestType;
@@ -78,15 +78,15 @@ public abstract class ActionRequest extends XMLTask {
         }
         Logger.getLogger("a621").info(result.toString());
         if (result.getType().equals("response")) {
-            if (!Boolean.parseBoolean(result.getFirstChildText("success"))) {
-                quickToast(result.getFirstChildText("reason"));
+            if (!Boolean.parseBoolean(result.getFirstChildContent("success").orElse("false"))) {
+                quickToast(result.getFirstChildContent("reason").orElse("UNKNOWN ERROR"));
             } else {
-                String msg = result.getFirstChildText("reason");
+                String msg = result.getFirstChildContent("reason").orElse("UNKNOWN ERROR");
                 quickToast(msg != null ? msg : "Action completed");
                 onSuccess(result);
             }
         } else if (result.getType().equals("error")) {
-            quickToast(result.getAttribute("type"));
+            quickToast(result.getAttribute("type").orElse("UNKNOWN TYPE"));
         } else {
             //quickToast(APIsr[requestID]);
             onSuccess(result);

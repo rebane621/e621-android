@@ -4,6 +4,9 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
+import com.itwookie.XMLreader.XMLNode;
+import com.itwookie.XMLreader.XMLReader;
+
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -11,8 +14,6 @@ import java.util.logging.Logger;
 
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.activities.SettingsActivity;
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLReader;
 
 public abstract class LoginTask extends AsyncTask<String, Void, Boolean> {
 
@@ -49,11 +50,11 @@ public abstract class LoginTask extends AsyncTask<String, Void, Boolean> {
 
             if (result.getType().equals("error")) {
                 db.setValue("password", "");
-                Toast.makeText(context, result.getAttribute("type"), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, result.getAttribute("type").orElse(""), Toast.LENGTH_LONG).show();
                 ret = false;
             } else {
-                XMLNode c = result.children().get(0);
-                String hash = c.getAttribute("password_hash");
+                XMLNode c = result.getChildren().get(0);
+                String hash = c.getAttribute("password_hash").orElse("");
                 TakeMyLoginString = "login="+login[0]+"&password_hash="+hash;
                 db.setValue("password", hash);
                 ret = true;

@@ -10,6 +10,10 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.itwookie.XMLreader.XMLNode;
+import com.itwookie.XMLreader.XMLTask;
+
+import java.util.List;
 import java.util.logging.Logger;
 
 import de.e621.rebane.FilterManager;
@@ -18,8 +22,6 @@ import de.e621.rebane.MiscStatics;
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.WebImageView;
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLTask;
 
 public class CoverShowActivity extends DrawerWrapper implements View.OnClickListener {
 
@@ -64,35 +66,35 @@ public class CoverShowActivity extends DrawerWrapper implements View.OnClickList
 
         XMLNode cover = (XMLNode) getIntent().getSerializableExtra(EXTRADISPLAYDATA);
         if (type.equals("pool")) {
-            coverID = Integer.parseInt(cover.getAttribute("id"));
-            max = Integer.parseInt(cover.getAttribute("post_count"));
-            name.setText(cover.getAttribute("name"));
-            meta.setText(Html.fromHtml(HTMLformat.bold("Creator: ") + cover.getAttribute("user_id") + "<br>" +
-                    HTMLformat.bold("Post count: ") + cover.getAttribute("post_count") + "<br>" +
-                    HTMLformat.bold("Created:<br> ") + cover.getAttribute("created_at") + "<br>" +
-                    HTMLformat.bold("Last edit:<br> ") + cover.getAttribute("updated_at") + "<br>" +
-                    HTMLformat.bold("Locked: ") + cover.getAttribute("is_locked")));
+            coverID = Integer.parseInt(cover.getAttribute("id").orElse(""));
+            max = Integer.parseInt(cover.getAttribute("post_count").orElse(""));
+            name.setText(cover.getAttribute("name").orElse(""));
+            meta.setText(Html.fromHtml(HTMLformat.bold("Creator: ") + cover.getAttribute("user_id").orElse("") + "<br>" +
+                    HTMLformat.bold("Post count: ") + cover.getAttribute("post_count").orElse("") + "<br>" +
+                    HTMLformat.bold("Created:<br> ") + cover.getAttribute("created_at").orElse("") + "<br>" +
+                    HTMLformat.bold("Last edit:<br> ") + cover.getAttribute("updated_at").orElse("") + "<br>" +
+                    HTMLformat.bold("Locked: ") + cover.getAttribute("is_locked").orElse("")));
         } else {
-            coverID = Integer.parseInt(cover.getFirstChildText("id"));
-            max = Integer.parseInt(cover.getFirstChildText("post-count"));
-            name.setText(cover.getFirstChildText("name"));
-            meta.setText(Html.fromHtml(HTMLformat.bold("Creator: ") + cover.getFirstChildText("user-id") + "<br>" +
-                    HTMLformat.bold("Post count: ") + cover.getFirstChildText("post-count") + "<br>" +
-                    HTMLformat.bold("Created:<br> ") + MiscStatics.readableTime(cover.getFirstChildText("created-at")) + "<br>" +
-                    HTMLformat.bold("Last edit:<br> ") + MiscStatics.readableTime(cover.getFirstChildText("updated-at")) + "<br>" +
-                    HTMLformat.bold("Type: ") + (Boolean.parseBoolean(cover.getFirstChildText("public")) ? "Public" : "Private")));
+            coverID = Integer.parseInt(cover.getFirstChildContent("id").orElse(""));
+            max = Integer.parseInt(cover.getFirstChildContent("post-count").orElse(""));
+            name.setText(cover.getFirstChildContent("name").orElse(""));
+            meta.setText(Html.fromHtml(HTMLformat.bold("Creator: ") + cover.getFirstChildContent("user-id").orElse("") + "<br>" +
+                    HTMLformat.bold("Post count: ") + cover.getFirstChildContent("post-count").orElse("") + "<br>" +
+                    HTMLformat.bold("Created:<br> ") + MiscStatics.readableTime(cover.getFirstChildContent("created-at").orElse("")) + "<br>" +
+                    HTMLformat.bold("Last edit:<br> ") + MiscStatics.readableTime(cover.getFirstChildContent("updated-at").orElse("")) + "<br>" +
+                    HTMLformat.bold("Type: ") + (Boolean.parseBoolean(cover.getFirstChildContent("public").orElse("")) ? "Public" : "Private")));
         }
-        desc.setText(cover.getFirstChildText("description"));
+        desc.setText(cover.getFirstChildContent("description").orElse(""));
 
 
-        new XMLTask(getApplicationContext()) {
+        new XMLTask() {
             @Override protected void onPostExecute(XMLNode result) {
                 String url;
                 try {
                     //coverID = Integer.parseInt(result.getAttribute("id"));
-                    XMLNode firstPost = result.getElementsByTagName("post")[0];
+                    XMLNode firstPost = result.getElementsByTagName("post").get(0);
                     String quality = database.getValue(SettingsActivity.SETTINGPREVIEWQUALITY);
-                    url = firstPost.getFirstChildText(quality);
+                    url = firstPost.getFirstChildContent(quality).orElse("");
                     preview.setImageUrl(type + coverID, url, true);
                     entryPoint = firstPost.clone(); //throw parent away
                     read.setTextColor(getResources().getColor(R.color.colorAccent));
@@ -103,7 +105,7 @@ public class CoverShowActivity extends DrawerWrapper implements View.OnClickList
                     e.printStackTrace();
                 }
             }
-        }.execute(baseURL + (type.equals("set") ? "set/show.xml?id=" + cover.getFirstChildText("id") : "pool/show.xml?id=" + cover.getAttribute("id")));
+        }.execute(baseURL + (type.equals("set") ? "set/show.xml?id=" + cover.getFirstChildContent("id").orElse("") : "pool/show.xml?id=" + cover.getAttribute("id").orElse("")));
     }
 
     @Override public void onClick(View view) {
@@ -134,16 +136,16 @@ public class CoverShowActivity extends DrawerWrapper implements View.OnClickList
             index=0;
         }
 
-        new XMLTask(this) {
+        new XMLTask() {
             @Override protected void onPostExecute(XMLNode result) {
                 if (!result.getType().equals("posts")){ //try to return the first "posts" element found
-                    XMLNode[] wat = result.getElementsByTagName("posts");
-                    if (wat.length>0) result = wat[0];
+                    List<XMLNode> wat = result.getElementsByTagName("posts");
+                    if (wat.size()>0) result = wat.get(0);
                 }
                 if (result == null || !result.getType().equals("posts") || result.getChildCount()<=index) {
                     quickToast("No results");
                 } else {
-                    XMLNode child0 = result.getChildren()[index];
+                    XMLNode child0 = result.getChildren().get(index);
                     Intent prev = new Intent(CoverShowActivity.this, PostShowActivity.class);
                     SQLiteDB database = new SQLiteDB(CoverShowActivity.this); database.open(); //required for blacklist string
                     if (new FilterManager(CoverShowActivity.this, database.getStringArray(SettingsActivity.SETTINGBLACKLIST)).isBlacklisted(child0))

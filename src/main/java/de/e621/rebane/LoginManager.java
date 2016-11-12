@@ -5,14 +5,15 @@ import android.content.Context;
 import android.view.View;
 import android.widget.Toast;
 
+import com.itwookie.XMLreader.XMLNode;
+import com.itwookie.XMLreader.XMLTask;
+
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 import de.e621.rebane.SQLite.SQLiteDB;
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.SettingsActivity;
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLTask;
 
 public class LoginManager {
 
@@ -88,14 +89,14 @@ public class LoginManager {
                     Toast.makeText(context, "Login Successfull!", Toast.LENGTH_SHORT).show();
                     try { closeme.finish(); } catch (Exception e) {e.printStackTrace();} // catch in case closeme is null or activity already closed
 
-                    new XMLTask(context) {
+                    new XMLTask() {
                         @Override protected void onPostExecute(XMLNode result) {
                             try {
                                 for (XMLNode n : result.getChildren()) {
-                                    if (n.getAttribute("name").equalsIgnoreCase(username)) {    //we have to double check
-                                        userid = Integer.parseInt(n.getAttribute("id"));
+                                    if (n.getAttribute("name").orElse("").equalsIgnoreCase(username)) {    //we have to double check
+                                        userid = Integer.parseInt(n.getAttribute("id").orElse(""));
                                         db.setValue("userid", userid.toString());
-                                        avatarid = Integer.parseInt(n.getAttribute("avatar_id"));
+                                        avatarid = Integer.parseInt(n.getAttribute("avatar_id").orElse(""));
                                         db.setValue("useravatarid", avatarid.toString());
                                     }
                                 }
@@ -105,10 +106,10 @@ public class LoginManager {
                             }  //well, fack it
 
                             if (avatarid != null && avatarid>0) {
-                                new XMLTask(context) {
+                                new XMLTask() {
                                     @Override protected void onPostExecute(XMLNode result) {
                                         if (result==null || result.getChildCount()==0) return;
-                                        avatarurl = result.getFirstChildText("sample_url");
+                                        avatarurl = result.getFirstChildContent("sample_url").orElse("");
                                         db.setValue("useravatarurl", URLEncoder.encode(avatarurl));
                                     }
                                 }.execute(baseURL + "post/show.xml?id=" + avatarid);

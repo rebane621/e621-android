@@ -6,12 +6,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import de.e621.rebane.FilterManager;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class CommentListAdapter extends ArrayAdapter<XMLNode> {
     private List<XMLNode> list = null;

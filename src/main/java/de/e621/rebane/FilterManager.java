@@ -4,13 +4,13 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.v4.util.SimpleArrayMap;
 
+import com.itwookie.XMLreader.XMLNode;
+import com.itwookie.XMLreader.XMLUtils;
+
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import de.e621.rebane.xmlreader.XMLNode;
-import de.e621.rebane.xmlreader.XMLUtils;
 
 public class FilterManager {
 
@@ -45,7 +45,7 @@ public class FilterManager {
     public boolean isBlacklisted(XMLNode check) {
         boolean listed = false;
 
-        String tgs = check.getFirstChildText("tags");
+        String tgs = check.getFirstChildContent("tags").orElse("");
         if ( !(tgs == null || tgs.isEmpty()) ) {
             for (String bl : Blacklist) {
                 //hastags && not filter applies
@@ -65,7 +65,7 @@ public class FilterManager {
         Set<String> hits = new LinkedHashSet<String>();
 
         //build set of "hits"
-        String tgs = check.getFirstChildText("tags");
+        String tgs = check.getFirstChildContent("tags").orElse("");
         if ( !(tgs == null || tgs.trim().isEmpty()) ) {
             for (String bl : Blacklist) {
                 //hastags && not filter applies
@@ -108,7 +108,7 @@ public class FilterManager {
             String nv;
             switch (k) {
                 case "rating":
-                    nv = node.getChildrenByTagName("rating")[0].getInnerText();
+                    nv = node.getChildrenByTagName("rating").get(0).getContent();
                     if (nv == null) return false;
                     if (v.charAt(0) != nv.charAt(0)) return fail;
                     break;
@@ -123,7 +123,7 @@ public class FilterManager {
                     sorting = new XMLComparator(v, !asc);
                     break;/*/
                 default:
-                    nv = node.getFirstChildText(k);
+                    nv = node.getFirstChildContent(k).orElse("");
                     if (nv == null) return !fail; //skip invalid tag
 
                     if (numericFilter.matcher(v).matches()) {
@@ -138,7 +138,7 @@ public class FilterManager {
                     }
             }
         } else {
-            String ntags = node.getChildrenByTagName("tags")[0].getInnerText();
+            String ntags = node.getChildrenByTagName("tags").get(0).getContent();
             if (ntags != null && !ntags.isEmpty()) {
                 String[] ntag = ntags.split(" ");
                 boolean found = false;

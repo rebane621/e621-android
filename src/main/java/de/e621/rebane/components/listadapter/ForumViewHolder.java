@@ -3,8 +3,9 @@ package de.e621.rebane.components.listadapter;
 import android.view.View;
 import android.widget.TextView;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import de.e621.rebane.a621.R;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class ForumViewHolder {
     TextView txtTitle, txtCreator;
@@ -27,7 +28,7 @@ public class ForumViewHolder {
         });
 
 
-        txtTitle.setText(data.getFirstChildText("title"));
-        txtCreator.setText(data.getFirstChildText("creator"));
+        txtTitle.setText(data.getFirstChildContent("title").orElse(""));
+        txtCreator.setText(data.getFirstChildContent("creator").orElse(""));
     }
 }

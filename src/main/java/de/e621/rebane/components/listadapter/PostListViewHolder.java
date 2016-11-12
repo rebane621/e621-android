@@ -7,10 +7,11 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import de.e621.rebane.a621.R;
 import de.e621.rebane.activities.PostShowActivity;
 import de.e621.rebane.components.WebImageView;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class PostListViewHolder {
     WebImageView previewImage;
@@ -46,8 +47,8 @@ public class PostListViewHolder {
         });
 
         Context context = convertView.getContext();
-        boolean isBlacklisted = Boolean.valueOf(data.getAttribute("Blacklisted"));
-        String tmp = data.getFirstChildText("file_ext");
+        boolean isBlacklisted = Boolean.valueOf(data.getAttribute("Blacklisted").orElse(""));
+        String tmp = data.getFirstChildContent("file_ext").orElse("");
         if (isBlacklisted)
             previewImage.setImageDrawable(context.getResources().getDrawable(R.mipmap.thumb_blocked));
         else if (tmp.equals("swf"))
@@ -57,12 +58,12 @@ public class PostListViewHolder {
         else {
             previewImage.setPlaceholderImage(context.getResources().getDrawable(R.mipmap.thumb_loading));
             previewImage.setAdapter(parentAdapter);
-            previewImage.setImageUrl(data.getFirstChildText("md5")+"th", data.getFirstChildText(imageQuality), false);
+            previewImage.setImageUrl(data.getFirstChildContent("md5").orElse("")+"th", data.getFirstChildContent(imageQuality).orElse(""), false);
         }
 
-        boolean isParent = Boolean.parseBoolean(data.getFirstChildText("has_children"));
-        boolean isChild = !data.getChildrenByTagName("parent_id")[0].attributes().contains("nil");
-        if ("pending".equals(data.getFirstChildText("status")))
+        boolean isParent = Boolean.parseBoolean(data.getFirstChildContent("has_children").orElse(""));
+        boolean isChild = !data.getChildrenByTagName("parent_id").get(0).attributes().contains("nil");
+        if ("pending".equals(data.getFirstChildContent("status").orElse("")))
             convertView.setBackground(context.getResources().getDrawable(R.drawable.thumb_bpending));   //blue
         else if (isChild)
             convertView.setBackground(context.getResources().getDrawable(R.drawable.thumb_bchild));     //yellow
@@ -71,16 +72,16 @@ public class PostListViewHolder {
         else
             convertView.setBackground(context.getResources().getDrawable(R.drawable.thumb_bnormal));    //none
 
-        int value = Integer.parseInt(data.getFirstChildText("score"));
+        int value = Integer.parseInt(data.getFirstChildContent("score").orElse(""));
         if (value < 0) txtLeft.setTextColor(context.getResources().getColor(R.color.preview_red));
         else if (value > 0) txtLeft.setTextColor(context.getResources().getColor(R.color.preview_green));
         else txtLeft.setTextColor(context.getResources().getColor(R.color.text_neutral));
         txtLeft.setText("▲" + value);
 
-        value = Integer.parseInt(data.getFirstChildText("fav_count"));
+        value = Integer.parseInt(data.getFirstChildContent("fav_count").orElse(""));
         txtMid.setText("♥" + value);
 
-        String rating = data.getFirstChildText("rating").toUpperCase();
+        String rating = data.getFirstChildContent("rating").orElse("").toUpperCase();
         if (rating.equals("E")) txtRight.setTextColor(context.getResources().getColor(R.color.preview_red));
         else if (rating.equals("S")) txtRight.setTextColor(context.getResources().getColor(R.color.preview_green));
         else txtRight.setTextColor(context.getResources().getColor(R.color.preview_yellow));

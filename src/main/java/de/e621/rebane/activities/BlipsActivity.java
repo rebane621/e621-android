@@ -7,9 +7,10 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.view.View;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.listadapter.BlipListAdapter;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class BlipsActivity extends PaginatedListActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
 
@@ -52,7 +53,7 @@ public class BlipsActivity extends PaginatedListActivity implements SwipeRefresh
     }
 
     @Override void onSearchResult(XMLNode result, String query, int page) {
-        results = new BlipListAdapter(getApplicationContext(), R.id.lblTitle, result.children(), baseURL, blacklist, postLoadUserdata);
+        results = new BlipListAdapter(getApplicationContext(), R.id.lblTitle, result.getChildren(), baseURL, blacklist, postLoadUserdata);
         //results.svNumPosts = (result.attributes().contains("count") ? Integer.valueOf(result.getAttribute("count")) : 0); //this value is not provided
         this.page = page;
 

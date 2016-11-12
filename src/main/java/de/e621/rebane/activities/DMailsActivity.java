@@ -11,12 +11,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 import de.e621.rebane.a621.R;
 import de.e621.rebane.components.listadapter.DMailListAdapter;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class DMailsActivity extends PaginatedListActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
 
@@ -87,7 +88,7 @@ public class DMailsActivity extends PaginatedListActivity implements SwipeRefres
     }
 
     @Override void onSearchResult(XMLNode result, String query, int page) {
-        results = new DMailListAdapter(getApplicationContext(), R.id.lblTitle, result.children());
+        results = new DMailListAdapter(getApplicationContext(), R.id.lblTitle, result.getChildren());
         //results.svNumPosts = (result.attributes().contains("count") ? Integer.valueOf(result.getAttribute("count")) : 0); //this value is not provided
         DMailsActivity.this.page = page;
 

@@ -7,6 +7,8 @@ import android.text.Html;
 import android.view.View;
 import android.widget.TextView;
 
+import com.itwookie.XMLreader.XMLNode;
+
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -14,7 +16,6 @@ import de.e621.rebane.DTextParser;
 import de.e621.rebane.HTMLformat;
 import de.e621.rebane.MiscStatics;
 import de.e621.rebane.a621.R;
-import de.e621.rebane.xmlreader.XMLNode;
 
 public class DMailShowActivity extends DrawerWrapper implements View.OnClickListener {
 
@@ -39,23 +40,23 @@ public class DMailShowActivity extends DrawerWrapper implements View.OnClickList
         Integer myID = new Integer(getIntent().getIntExtra(DMAILMESSAGEID, 0));
         XMLNode node = (XMLNode)getIntent().getSerializableExtra(DMAILMESSAGENODE);
 
-        lblRcpt.setText(node.getFirstChildText("to-id"));
-        lblFrom.setText(node.getFirstChildText("from-id"));
-        lblAge.setText(MiscStatics.readableTime(node.getFirstChildText("created-at")));
-        lblMessage.setText(Html.fromHtml(DTextParser.parse(node.getFirstChildText("body"))));
+        lblRcpt.setText(node.getFirstChildContent("to-id").orElse(""));
+        lblFrom.setText(node.getFirstChildContent("from-id").orElse(""));
+        lblAge.setText(MiscStatics.readableTime(node.getFirstChildContent("created-at").orElse("")));
+        lblMessage.setText(Html.fromHtml(DTextParser.parse(node.getFirstChildContent("body").orElse(""))));
 
-        Integer from = Integer.parseInt(node.getFirstChildText("from-id")),
-                to = Integer.parseInt(node.getFirstChildText("to-id"));
+        Integer from = Integer.parseInt(node.getFirstChildContent("from-id").orElse("")),
+                to = Integer.parseInt(node.getFirstChildContent("to-id").orElse(""));
         Integer dir = ((myID == 0 || from.equals(to)) ? 0 : (myID.compareTo(to)!=0 ? 1 : -1));
         int colorcode = (dir < 0 ? getApplicationContext().getResources().getColor(R.color.preview_green) :
                 (dir > 0 ? getApplicationContext().getResources().getColor(R.color.preview_red) :
                         getApplicationContext().getResources().getColor(R.color.text_neutral)));
-        lblTopic.setText(Html.fromHtml(HTMLformat.colored(node.getFirstChildText("title"), colorcode)));
+        lblTopic.setText(Html.fromHtml(HTMLformat.colored(node.getFirstChildContent("title").orElse(""), colorcode)));
 
         //post load usernames
 
         //load dmail/show/id to mark read
-        if (!Boolean.parseBoolean(node.getFirstChildText("has-seen"))) {
+        if (!Boolean.parseBoolean(node.getFirstChildContent("has-seen").orElse(""))) {
             new AsyncTask<String, Void, Void>() {
                 @Override protected Void doInBackground(String... args) {
                     try {
@@ -66,7 +67,7 @@ public class DMailShowActivity extends DrawerWrapper implements View.OnClickList
                     }
                     return null;
                 }
-            }.execute(database.getValue(SettingsActivity.SETTINGBASEURL) + "dmail/show/" + node.getFirstChildText("id"), getApplicationContext().getString(R.string.requestUserAgent));
+            }.execute(database.getValue(SettingsActivity.SETTINGBASEURL) + "dmail/show/" + node.getFirstChildContent("id").orElse(""), getApplicationContext().getString(R.string.requestUserAgent));
         }
     }
 
